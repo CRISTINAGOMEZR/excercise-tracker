@@ -121,23 +121,46 @@ export default function RoutineForm({ initial }: { initial?: Rutina }) {
   async function handleAddItem() {
     setItemError('');
 
-    // ── Subir uno o varios archivos a la vez ──────────────────
+    // ── Subir uno o varios archivos a la vez (en paralelo) ─────
     if (tab === 'upload') {
       if (files.length === 0) { setItemError('Selecciona uno o más archivos de video.'); return; }
       setAdding(true);
+      const total = files.length;
+      setBatch({ cur: 0, total });
+      setProgress(0);
+
+      // Progreso global = promedio del progreso de cada archivo.
+      const pcts = new Array(total).fill(0);
+      let done = 0;
+      const updateGlobal = () => {
+        setProgress(Math.round(pcts.reduce((a, b) => a + b, 0) / total));
+      };
+
       try {
-        const nuevos: RutinaItem[] = [];
-        for (let i = 0; i < files.length; i++) {
-          setBatch({ cur: i + 1, total: files.length });
-          setProgress(0);
-          const videoUrl = await uploadVideo(files[i], setProgress);
+        const results = await Promise.all(
+          files.map((file, i) =>
+            uploadVideo(file, (p) => { pcts[i] = p; updateGlobal(); }).then((res) => {
+              done += 1;
+              setBatch({ cur: done, total });
+              return res;
+            })
+          )
+        );
+        const nuevos: RutinaItem[] = results.map((res, i) => {
           // Si hay un solo archivo y el usuario escribió un nombre, úsalo.
           const nm =
-            files.length === 1 && nombre.trim()
+            total === 1 && nombre.trim()
               ? nombre.trim()
               : nombreDesdeArchivo(files[i].name) || `Ejercicio ${items.length + i + 1}`;
-          nuevos.push({ id: uid(), nombre: nm, fase, tipo: 'upload', url: videoUrl });
-        }
+          return {
+            id: uid(),
+            nombre: nm,
+            fase,
+            tipo: 'upload',
+            url: res.url,
+            ...(res.thumbnail ? { miniatura: res.thumbnail } : {}),
+          };
+        });
         setItems((prev) => [...prev, ...nuevos]);
         resetItemForm();
       } catch (e) {
@@ -370,7 +393,9 @@ export default function RoutineForm({ initial }: { initial?: Rutina }) {
             {adding && batch && (
               <div className="mt-2 space-y-1">
                 <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                  Subiendo {batch.cur} de {batch.total}…
+                  {batch.total > 1
+                    ? `Subiendo ${batch.total} videos a la vez… ${batch.cur}/${batch.total} listos (${progress}%)`
+                    : `Subiendo… ${progress}%`}
                 </p>
                 <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-border)' }}>
                   <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: 'var(--color-accent)' }} />
@@ -424,7 +449,7 @@ export default function RoutineForm({ initial }: { initial?: Rutina }) {
         >
           {adding
             ? batch
-              ? `Subiendo ${batch.cur}/${batch.total}…`
+              ? `Subiendo… ${progress}%`
               : 'Agregando…'
             : tab === 'upload' && files.length > 1
               ? `+ Agregar ${files.length} videos a la rutina`

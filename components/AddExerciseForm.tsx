@@ -89,7 +89,9 @@ export default function AddExerciseForm() {
       let miniatura: string | undefined;
 
       if (tab === 'upload' && file) {
-        videoUrl = await uploadVideo(file, setProgress);
+        const res = await uploadVideo(file, setProgress);
+        videoUrl = res.url;
+        if (res.thumbnail) miniatura = res.thumbnail;
       } else {
         videoUrl = url.trim();
         if (fetchedThumb) miniatura = fetchedThumb;

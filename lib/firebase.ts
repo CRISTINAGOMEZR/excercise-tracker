@@ -1,7 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -25,4 +24,3 @@ export const db      = initializeFirestore(app, {
   // lanzar "invalid-argument" al guardar.
   ignoreUndefinedProperties: true,
 });
-export const storage = getStorage(app);
