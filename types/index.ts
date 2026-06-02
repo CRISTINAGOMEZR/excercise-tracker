@@ -14,8 +14,9 @@ export interface Exercise {
 
 export interface Registro {
   id: string;
-  ejercicioId: string;
-  fecha: string; // YYYY-MM-DD
+  ejercicioId?: string;   // vacío si es una actividad libre (no de la biblioteca)
+  actividad?: string;     // nombre libre, p.ej. "Correr 30 min"
+  fecha: string;          // YYYY-MM-DD
   completadoAt: Date;
 }
 

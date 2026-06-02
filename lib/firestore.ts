@@ -55,6 +55,16 @@ export async function deleteEjercicio(id: string): Promise<void> {
   await deleteDoc(doc(db, 'ejercicios', id));
 }
 
+/** Registra un entrenamiento libre de hoy (no ligado a un video de la biblioteca). */
+export async function registrarActividad(nombre?: string): Promise<string> {
+  const ref = await addDoc(collection(db, 'registros'), {
+    actividad:    nombre?.trim() || 'Entrenamiento',
+    fecha:        todayStr(),
+    completadoAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
 // ─── Registros ────────────────────────────────────────────────────────────────
 
 export async function getRegistrosHoy(): Promise<Registro[]> {
@@ -67,6 +77,7 @@ export async function getRegistrosHoy(): Promise<Registro[]> {
     return {
       id:           d.id,
       ejercicioId:  data.ejercicioId,
+      actividad:    data.actividad,
       fecha:        data.fecha,
       completadoAt: (data.completadoAt as Timestamp)?.toDate() ?? new Date(),
     } as Registro;
@@ -82,6 +93,7 @@ export async function getRegistrosByFecha(fecha: string): Promise<Registro[]> {
     return {
       id:           d.id,
       ejercicioId:  data.ejercicioId,
+      actividad:    data.actividad,
       fecha:        data.fecha,
       completadoAt: (data.completadoAt as Timestamp)?.toDate() ?? new Date(),
     } as Registro;
