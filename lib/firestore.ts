@@ -3,7 +3,9 @@ import {
   doc,
   addDoc,
   setDoc,
+  updateDoc,
   deleteDoc,
+  getDoc,
   getDocs,
   query,
   where,
@@ -12,7 +14,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Exercise, Registro } from '@/types';
+import type { Exercise, Registro, Rutina, RutinaItem } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,6 +80,7 @@ export async function getRegistrosHoy(): Promise<Registro[]> {
     return {
       id:           d.id,
       ejercicioId:  data.ejercicioId,
+      rutinaId:     data.rutinaId,
       actividad:    data.actividad,
       fecha:        data.fecha,
       completadoAt: (data.completadoAt as Timestamp)?.toDate() ?? new Date(),
@@ -94,6 +97,7 @@ export async function getRegistrosTodos(): Promise<Registro[]> {
     return {
       id:           d.id,
       ejercicioId:  data.ejercicioId,
+      rutinaId:     data.rutinaId,
       actividad:    data.actividad,
       fecha:        data.fecha,
       completadoAt: (data.completadoAt as Timestamp)?.toDate() ?? new Date(),
@@ -110,6 +114,7 @@ export async function getRegistrosByFecha(fecha: string): Promise<Registro[]> {
     return {
       id:           d.id,
       ejercicioId:  data.ejercicioId,
+      rutinaId:     data.rutinaId,
       actividad:    data.actividad,
       fecha:        data.fecha,
       completadoAt: (data.completadoAt as Timestamp)?.toDate() ?? new Date(),
@@ -128,6 +133,64 @@ export async function marcarHecho(ejercicioId: string): Promise<string> {
 
 export async function desmarcarHecho(registroId: string): Promise<void> {
   await deleteDoc(doc(db, 'registros', registroId));
+}
+
+// ─── Rutinas (varios videos por entrenamiento) ──────────────────────────────────
+
+function mapRutina(id: string, data: Record<string, unknown>): Rutina {
+  return {
+    id,
+    titulo: (data.titulo as string) ?? '',
+    items: ((data.items as RutinaItem[]) ?? []).map((it) => ({ ...it })),
+    createdAt: (data.createdAt as Timestamp)?.toDate?.() ?? new Date(),
+  };
+}
+
+export async function getRutinas(): Promise<Rutina[]> {
+  const snap = await getDocs(
+    query(collection(db, 'rutinas'), orderBy('createdAt', 'desc'))
+  );
+  return snap.docs.map((d) => mapRutina(d.id, d.data()));
+}
+
+export async function getRutina(id: string): Promise<Rutina | null> {
+  const snap = await getDoc(doc(db, 'rutinas', id));
+  return snap.exists() ? mapRutina(snap.id, snap.data()) : null;
+}
+
+export async function addRutina(
+  data: Omit<Rutina, 'id' | 'createdAt'>
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'rutinas'), {
+    titulo: data.titulo,
+    items: data.items,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function updateRutina(
+  id: string,
+  data: Pick<Rutina, 'titulo' | 'items'>
+): Promise<void> {
+  await updateDoc(doc(db, 'rutinas', id), {
+    titulo: data.titulo,
+    items: data.items,
+  });
+}
+
+export async function deleteRutina(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'rutinas', id));
+}
+
+/** Marca una rutina como completada hoy. */
+export async function marcarRutinaHecha(rutinaId: string): Promise<string> {
+  const ref = await addDoc(collection(db, 'registros'), {
+    rutinaId,
+    fecha:        todayStr(),
+    completadoAt: serverTimestamp(),
+  });
+  return ref.id;
 }
 
 // ─── Notificaciones (tokens FCM) ────────────────────────────────────────────────

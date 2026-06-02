@@ -61,3 +61,18 @@ export function getEmbedUrl(url: string): string | null {
 export function isVerticalEmbed(url: string): boolean {
   return getInstagram(url) !== null || /youtube\.com\/shorts\//.test(url);
 }
+
+/**
+ * URL embed que se reproduce en bucle (loop) cuando es posible.
+ * YouTube y Vimeo soportan loop por parámetro; Instagram no.
+ */
+export function getLoopEmbedUrl(url: string): string | null {
+  const yt = getYouTubeId(url);
+  if (yt)
+    return `https://www.youtube.com/embed/${yt}?autoplay=1&mute=1&loop=1&playlist=${yt}&rel=0&playsinline=1&controls=1`;
+  const vm = getVimeoId(url);
+  if (vm) return `https://player.vimeo.com/video/${vm}?autoplay=1&loop=1&muted=1`;
+  const ig = getInstagram(url);
+  if (ig) return `https://www.instagram.com/${ig.type}/${ig.code}/embed`;
+  return null;
+}
