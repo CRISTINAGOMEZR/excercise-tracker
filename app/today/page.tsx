@@ -6,6 +6,7 @@ import Nav from '@/components/Nav';
 import ExerciseCard from '@/components/ExerciseCard';
 import VideoPlayer from '@/components/VideoPlayer';
 import Celebration from '@/components/Celebration';
+import InstallPrompt from '@/components/InstallPrompt';
 import {
   getEjercicios,
   getRegistrosHoy,
@@ -134,6 +135,9 @@ export default function TodayPage() {
 
         {!loading && (
           <div className="px-5 space-y-4">
+            {/* Instalar app (solo aparece si el navegador lo permite) */}
+            <InstallPrompt />
+
             {/* Hero: racha + meta diaria */}
             <div
               className="rounded-3xl p-5 flex items-center gap-5"
