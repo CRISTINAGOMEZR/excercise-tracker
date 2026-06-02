@@ -1,11 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { addEjercicio } from '@/lib/firestore';
 import { uploadVideo } from '@/lib/storage';
-import { isValidVideoLink, youtubeThumbnail, getYouTubeId } from '@/lib/videoUtils';
+import { isValidVideoLink, getProvider } from '@/lib/videoUtils';
 import { CATEGORIAS, type Categoria } from '@/types';
+
+const PROVIDER_LABEL: Record<string, string> = {
+  youtube: 'YouTube',
+  vimeo: 'Vimeo',
+  instagram: 'Instagram',
+};
 
 type Tab = 'link' | 'upload';
 
@@ -22,6 +28,45 @@ export default function AddExerciseForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Importación automática (preview)
+  const [importing, setImporting] = useState(false);
+  const [fetchedThumb, setFetchedThumb] = useState<string | null>(null);
+  const [fetchedProvider, setFetchedProvider] = useState<string | null>(null);
+  const [titleTouched, setTitleTouched] = useState(false);
+
+  // Cuando se pega un enlace válido, trae título + miniatura automáticamente.
+  useEffect(() => {
+    if (tab !== 'link') return;
+    const link = url.trim();
+    if (!isValidVideoLink(link)) {
+      setFetchedThumb(null);
+      setFetchedProvider(null);
+      return;
+    }
+    let cancel = false;
+    setImporting(true);
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/oembed?url=${encodeURIComponent(link)}`);
+        const j = await r.json();
+        if (cancel) return;
+        setFetchedProvider(j.provider ?? getProvider(link));
+        setFetchedThumb(j.thumbnail ?? null);
+        // Auto-rellena el título solo si el usuario no lo ha escrito a mano.
+        if (j.title && !titleTouched) setTitulo(j.title.slice(0, 120));
+      } catch {
+        if (!cancel) setFetchedProvider(getProvider(link));
+      } finally {
+        if (!cancel) setImporting(false);
+      }
+    }, 600);
+    return () => {
+      cancel = true;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, tab]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,8 +91,8 @@ export default function AddExerciseForm() {
       if (tab === 'upload' && file) {
         videoUrl = await uploadVideo(file, setProgress);
       } else {
-        const ytId = getYouTubeId(url);
-        if (ytId) miniatura = youtubeThumbnail(ytId);
+        videoUrl = url.trim();
+        if (fetchedThumb) miniatura = fetchedThumb;
       }
 
       await addEjercicio({
@@ -99,7 +144,7 @@ export default function AddExerciseForm() {
               boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
             }}
           >
-            {t === 'link' ? 'Enlace YouTube / Vimeo' : 'Subir video'}
+            {t === 'link' ? 'Importar enlace' : 'Subir video'}
           </button>
         ))}
       </div>
@@ -112,7 +157,7 @@ export default function AddExerciseForm() {
         <input
           type="text"
           value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
+          onChange={(e) => { setTitulo(e.target.value); setTitleTouched(true); }}
           placeholder="ej. Sentadillas 10 min"
           className={inputClass}
           style={inputStyle}
@@ -123,16 +168,65 @@ export default function AddExerciseForm() {
       {tab === 'link' ? (
         <div>
           <label className="block text-xs mb-1.5" style={{ color: 'var(--color-muted)' }}>
-            URL del video *
+            Pega el enlace del video *
           </label>
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://youtube.com/watch?v=..."
+            placeholder="YouTube, Vimeo o Instagram (reel/post)"
             className={inputClass}
             style={inputStyle}
           />
+
+          {/* Estado / preview de la importación */}
+          {url.trim() && !isValidVideoLink(url) && (
+            <p className="text-xs mt-1.5" style={{ color: 'var(--color-muted)' }}>
+              Pega un enlace de YouTube, Vimeo o Instagram.
+            </p>
+          )}
+
+          {importing && (
+            <div className="flex items-center gap-2 mt-2 text-xs" style={{ color: 'var(--color-muted)' }}>
+              <div className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin opacity-50" />
+              Importando datos del video…
+            </div>
+          )}
+
+          {!importing && fetchedProvider && (
+            <div
+              className="mt-3 rounded-xl overflow-hidden flex gap-3 p-2"
+              style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+            >
+              <div
+                className="relative flex-shrink-0 rounded-lg overflow-hidden"
+                style={{ width: 96, height: 64, backgroundColor: 'var(--color-border)' }}
+              >
+                {fetchedThumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={fetchedThumb} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xl opacity-40">▶</div>
+                )}
+              </div>
+              <div className="min-w-0 flex flex-col justify-center">
+                <span
+                  className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide font-medium mb-0.5"
+                  style={{ color: 'var(--color-accent)' }}
+                >
+                  ✓ {PROVIDER_LABEL[fetchedProvider] ?? 'Video'} detectado
+                </span>
+                <p className="text-sm leading-snug line-clamp-2" style={{ color: 'var(--color-text)' }}>
+                  {titulo || 'Listo para guardar'}
+                </p>
+                {!fetchedThumb && (
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-muted)' }}>
+                    Sin miniatura automática (puedes guardarlo igual).
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { getEmbedUrl, getYouTubeId } from '@/lib/videoUtils';
+import { getEmbedUrl, isVerticalEmbed } from '@/lib/videoUtils';
 import type { Exercise } from '@/types';
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
 
 export default function VideoPlayer({ exercise, onClose }: Props) {
   const embedUrl = exercise.tipo === 'link' ? getEmbedUrl(exercise.url) : null;
+  const vertical = exercise.tipo === 'link' && isVerticalEmbed(exercise.url);
 
   return (
     <div
@@ -41,10 +42,15 @@ export default function VideoPlayer({ exercise, onClose }: Props) {
         {exercise.tipo === 'link' && embedUrl ? (
           <iframe
             src={embedUrl}
-            className="w-full rounded-xl"
-            style={{ aspectRatio: '16/9', maxHeight: '60vh' }}
+            className="rounded-xl mx-auto"
+            style={
+              vertical
+                ? { width: 'auto', aspectRatio: '9/16', height: '70vh', maxWidth: '100%' }
+                : { width: '100%', aspectRatio: '16/9', maxHeight: '60vh' }
+            }
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
+            scrolling="no"
             title={exercise.titulo}
           />
         ) : (

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { youtubeThumbnail, getYouTubeId } from '@/lib/videoUtils';
 import type { Exercise } from '@/types';
 
@@ -34,11 +33,11 @@ export default function ExerciseCard({ exercise, done, onToggle, onPlay }: Props
         aria-label={`Reproducir ${exercise.titulo}`}
       >
         {thumbnail ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={thumbnail}
             alt={exercise.titulo}
-            fill
-            className="object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
           <div
