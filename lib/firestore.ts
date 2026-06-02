@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   addDoc,
+  setDoc,
   deleteDoc,
   getDocs,
   query,
@@ -127,6 +128,25 @@ export async function marcarHecho(ejercicioId: string): Promise<string> {
 
 export async function desmarcarHecho(registroId: string): Promise<void> {
   await deleteDoc(doc(db, 'registros', registroId));
+}
+
+// ─── Notificaciones (tokens FCM) ────────────────────────────────────────────────
+
+/**
+ * Guarda (o actualiza) el token FCM de este dispositivo. Usa el propio token
+ * como ID del documento para evitar duplicados si se vuelve a activar.
+ */
+export async function guardarTokenFCM(token: string): Promise<void> {
+  await setDoc(doc(db, 'tokens', token), {
+    token,
+    updatedAt: serverTimestamp(),
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+  });
+}
+
+/** Elimina un token FCM (p.ej. cuando ya no es válido). */
+export async function eliminarTokenFCM(token: string): Promise<void> {
+  await deleteDoc(doc(db, 'tokens', token));
 }
 
 // ─── Estadísticas ─────────────────────────────────────────────────────────────

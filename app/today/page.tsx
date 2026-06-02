@@ -7,6 +7,7 @@ import ExerciseCard from '@/components/ExerciseCard';
 import VideoPlayer from '@/components/VideoPlayer';
 import Celebration from '@/components/Celebration';
 import InstallPrompt from '@/components/InstallPrompt';
+import NotificationToggle from '@/components/NotificationToggle';
 import {
   getEjercicios,
   getRegistrosHoy,
@@ -137,6 +138,9 @@ export default function TodayPage() {
           <div className="px-5 space-y-4">
             {/* Instalar app (solo aparece si el navegador lo permite) */}
             <InstallPrompt />
+
+            {/* Activar notificaciones (solo aparece si aún no están activas) */}
+            <NotificationToggle />
 
             {/* Hero: racha + meta diaria */}
             <div
