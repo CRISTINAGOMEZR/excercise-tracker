@@ -34,6 +34,15 @@ function uid() {
     : Math.random().toString(36).slice(2);
 }
 
+/** Convierte "mi_video-final.mp4" → "mi video final" para usar como nombre. */
+function nombreDesdeArchivo(filename: string): string {
+  return filename
+    .replace(/\.[^.]+$/, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Ordena los items por fase (calentamiento → normal → enfriamiento). */
 function ordenarPorFase(items: RutinaItem[]): RutinaItem[] {
   return [...items].sort((a, b) => ORDEN_FASE[a.fase] - ORDEN_FASE[b.fase]);
@@ -54,13 +63,14 @@ export default function RoutineForm({ initial }: { initial?: Rutina }) {
   const [nombre, setNombre] = useState('');
   const [fase, setFase] = useState<Fase>('Normal');
   const [url, setUrl] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [nombreTouched, setNombreTouched] = useState(false);
   const [importing, setImporting] = useState(false);
   const [fetchedThumb, setFetchedThumb] = useState<string | null>(null);
   const [fetchedProvider, setFetchedProvider] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [batch, setBatch] = useState<{ cur: number; total: number } | null>(null);
   const [itemError, setItemError] = useState('');
 
   // Importa título + miniatura al pegar un enlace válido.
@@ -98,46 +108,69 @@ export default function RoutineForm({ initial }: { initial?: Rutina }) {
   function resetItemForm() {
     setNombre('');
     setUrl('');
-    setFile(null);
+    setFiles([]);
     setNombreTouched(false);
     setFetchedThumb(null);
     setFetchedProvider(null);
     setProgress(0);
+    setBatch(null);
     setItemError('');
     setFase('Normal');
   }
 
   async function handleAddItem() {
     setItemError('');
-    if (!nombre.trim()) { setItemError('Ponle un nombre al ejercicio.'); return; }
 
-    if (tab === 'link' && !isValidVideoLink(url)) {
+    // ── Subir uno o varios archivos a la vez ──────────────────
+    if (tab === 'upload') {
+      if (files.length === 0) { setItemError('Selecciona uno o más archivos de video.'); return; }
+      setAdding(true);
+      try {
+        const nuevos: RutinaItem[] = [];
+        for (let i = 0; i < files.length; i++) {
+          setBatch({ cur: i + 1, total: files.length });
+          setProgress(0);
+          const videoUrl = await uploadVideo(files[i], setProgress);
+          // Si hay un solo archivo y el usuario escribió un nombre, úsalo.
+          const nm =
+            files.length === 1 && nombre.trim()
+              ? nombre.trim()
+              : nombreDesdeArchivo(files[i].name) || `Ejercicio ${items.length + i + 1}`;
+          nuevos.push({ id: uid(), nombre: nm, fase, tipo: 'upload', url: videoUrl });
+        }
+        setItems((prev) => [...prev, ...nuevos]);
+        resetItemForm();
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        setItemError(`Error al subir: ${msg}`);
+      } finally {
+        setAdding(false);
+        setBatch(null);
+      }
+      return;
+    }
+
+    // ── Enlace (uno) ──────────────────────────────────────────
+    if (!nombre.trim()) { setItemError('Ponle un nombre al ejercicio.'); return; }
+    if (!isValidVideoLink(url)) {
       setItemError('Pega un enlace válido de YouTube, Vimeo o Instagram.');
       return;
     }
-    if (tab === 'upload' && !file) { setItemError('Selecciona un archivo de video.'); return; }
-
     setAdding(true);
     try {
-      let videoUrl = url.trim();
-      let miniatura: string | undefined = fetchedThumb ?? undefined;
-      if (tab === 'upload' && file) {
-        videoUrl = await uploadVideo(file, setProgress);
-        miniatura = undefined;
-      }
       const item: RutinaItem = {
         id: uid(),
         nombre: nombre.trim(),
         fase,
-        tipo: tab,
-        url: videoUrl,
-        ...(miniatura ? { miniatura } : {}),
+        tipo: 'link',
+        url: url.trim(),
+        ...(fetchedThumb ? { miniatura: fetchedThumb } : {}),
       };
       setItems((prev) => [...prev, item]);
       resetItemForm();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setItemError(`Error al subir: ${msg}`);
+      setItemError(`Error: ${msg}`);
     } finally {
       setAdding(false);
     }
@@ -312,26 +345,51 @@ export default function RoutineForm({ initial }: { initial?: Rutina }) {
             <input
               type="file"
               accept="video/*"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              multiple
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
               className={inputClass}
               style={{ ...inputStyle, paddingTop: '10px' }}
             />
-            {adding && progress > 0 && (
-              <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-border)' }}>
-                <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: 'var(--color-accent)' }} />
+            {files.length > 0 && !adding && (
+              <div className="mt-2 space-y-1">
+                <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                  {files.length} archivo{files.length !== 1 ? 's' : ''} seleccionado{files.length !== 1 ? 's' : ''}:
+                </p>
+                {files.map((f, i) => (
+                  <p key={i} className="text-xs truncate" style={{ color: 'var(--color-text)' }}>
+                    • {nombreDesdeArchivo(f.name)} <span style={{ color: 'var(--color-muted)' }}>({(f.size / 1024 / 1024).toFixed(1)} MB)</span>
+                  </p>
+                ))}
+                {files.length > 1 && (
+                  <p className="text-[11px]" style={{ color: 'var(--color-muted)' }}>
+                    Cada uno se agregará como ejercicio con la fase elegida abajo. Luego puedes editar nombres y fases.
+                  </p>
+                )}
+              </div>
+            )}
+            {adding && batch && (
+              <div className="mt-2 space-y-1">
+                <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                  Subiendo {batch.cur} de {batch.total}…
+                </p>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-border)' }}>
+                  <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: 'var(--color-accent)' }} />
+                </div>
               </div>
             )}
           </div>
         )}
 
-        {/* Nombre + fase del item */}
-        <input
-          value={nombre}
-          onChange={(e) => { setNombre(e.target.value); setNombreTouched(true); }}
-          placeholder="Nombre del ejercicio"
-          className={inputClass}
-          style={inputStyle}
-        />
+        {/* Nombre (solo para enlace o un único archivo) */}
+        {(tab === 'link' || files.length <= 1) && (
+          <input
+            value={nombre}
+            onChange={(e) => { setNombre(e.target.value); setNombreTouched(true); }}
+            placeholder={tab === 'upload' ? 'Nombre del ejercicio (opcional)' : 'Nombre del ejercicio'}
+            className={inputClass}
+            style={inputStyle}
+          />
+        )}
         <div>
           <label className="block text-xs mb-1.5" style={{ color: 'var(--color-muted)' }}>Fase</label>
           <div className="flex gap-2">
@@ -364,7 +422,13 @@ export default function RoutineForm({ initial }: { initial?: Rutina }) {
           className="w-full py-3 rounded-xl text-sm font-medium disabled:opacity-60"
           style={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}
         >
-          {adding ? (progress > 0 ? `Subiendo ${progress}%…` : 'Agregando…') : '+ Agregar a la rutina'}
+          {adding
+            ? batch
+              ? `Subiendo ${batch.cur}/${batch.total}…`
+              : 'Agregando…'
+            : tab === 'upload' && files.length > 1
+              ? `+ Agregar ${files.length} videos a la rutina`
+              : '+ Agregar a la rutina'}
         </button>
       </div>
 
