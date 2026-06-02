@@ -21,6 +21,7 @@ export default function AddExerciseForm() {
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,11 +60,13 @@ export default function AddExerciseForm() {
         notas:       notas.trim() || undefined,
       });
 
-      router.push('/library');
+      setSuccess(true);
+      setTimeout(() => router.push('/library'), 1500);
     } catch (err) {
-      setError('Ocurrió un error. Intenta de nuevo.');
+      const code = (err as { code?: string })?.code;
+      const msg = (err as { message?: string })?.message ?? String(err);
+      setError(`Error: ${code ?? ''} ${msg}`.trim());
       console.error(err);
-    } finally {
       setLoading(false);
     }
   }
@@ -215,6 +218,13 @@ export default function AddExerciseForm() {
         </p>
       )}
 
+      {/* Éxito */}
+      {success && (
+        <p className="text-sm px-1" style={{ color: 'var(--color-accent)' }}>
+          ✓ ¡Ejercicio guardado! Redirigiendo a tu biblioteca…
+        </p>
+      )}
+
       {/* Submit */}
       <button
         type="submit"
@@ -222,7 +232,11 @@ export default function AddExerciseForm() {
         className="w-full py-4 rounded-2xl text-white font-medium text-sm transition-opacity disabled:opacity-60"
         style={{ backgroundColor: 'var(--color-accent)' }}
       >
-        {loading ? (tab === 'upload' && progress > 0 ? `Subiendo ${progress}%…` : 'Guardando…') : 'Guardar ejercicio'}
+        {success
+          ? '✓ ¡Guardado!'
+          : loading
+            ? (tab === 'upload' && progress > 0 ? `Subiendo ${progress}%…` : 'Guardando…')
+            : 'Guardar ejercicio'}
       </button>
     </form>
   );

@@ -21,5 +21,8 @@ export const auth    = getAuth(app);
 // un proxy o una extensión del navegador.
 export const db      = initializeFirestore(app, {
   experimentalAutoDetectLongPolling: true,
+  // Ignora campos `undefined` (p.ej. duracionMin/notas vacíos) en vez de
+  // lanzar "invalid-argument" al guardar.
+  ignoreUndefinedProperties: true,
 });
 export const storage = getStorage(app);
