@@ -84,6 +84,22 @@ export async function getRegistrosHoy(): Promise<Registro[]> {
   });
 }
 
+export async function getRegistrosTodos(): Promise<Registro[]> {
+  const snap = await getDocs(
+    query(collection(db, 'registros'), orderBy('fecha', 'desc'))
+  );
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id:           d.id,
+      ejercicioId:  data.ejercicioId,
+      actividad:    data.actividad,
+      fecha:        data.fecha,
+      completadoAt: (data.completadoAt as Timestamp)?.toDate() ?? new Date(),
+    } as Registro;
+  });
+}
+
 export async function getRegistrosByFecha(fecha: string): Promise<Registro[]> {
   const snap = await getDocs(
     query(collection(db, 'registros'), where('fecha', '==', fecha))

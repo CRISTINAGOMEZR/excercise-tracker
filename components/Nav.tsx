@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const links = [
-  { href: '/today',   label: 'Hoy',       icon: '◎' },
+  { href: '/today',   label: 'Hoy',        icon: '◎' },
   { href: '/library', label: 'Biblioteca', icon: '◫' },
+  { href: '/stats',   label: 'Progreso',   icon: '▥' },
   { href: '/add',     label: 'Agregar',    icon: '+' },
 ];
 
