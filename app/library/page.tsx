@@ -6,7 +6,6 @@ import AuthGuard from '@/components/AuthGuard';
 import Nav from '@/components/Nav';
 import ExerciseCard from '@/components/ExerciseCard';
 import RoutineCard from '@/components/RoutineCard';
-import VideoPlayer from '@/components/VideoPlayer';
 import RoutinePlayer from '@/components/RoutinePlayer';
 import {
   getEjercicios,
@@ -25,7 +24,6 @@ export default function LibraryPage() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [rutinas, setRutinas] = useState<Rutina[]>([]);
   const [registros, setRegistros] = useState<Registro[]>([]);
-  const [playing, setPlaying] = useState<Exercise | null>(null);
   const [playingRutina, setPlayingRutina] = useState<Rutina | null>(null);
   const [filter, setFilter] = useState<string>('Todas');
   const [loading, setLoading] = useState(true);
@@ -179,7 +177,7 @@ export default function LibraryPage() {
                         exercise={ex}
                         done={isDone(ex.id)}
                         onToggle={() => handleToggle(ex)}
-                        onPlay={() => setPlaying(ex)}
+                        onPlay={() => router.push(`/library/${ex.id}`)}
                       />
                     ))}
                   </div>
@@ -190,7 +188,6 @@ export default function LibraryPage() {
         </main>
       </div>
 
-      {playing && <VideoPlayer exercise={playing} onClose={() => setPlaying(null)} />}
       {playingRutina && (
         <RoutinePlayer
           rutina={playingRutina}

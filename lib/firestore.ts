@@ -11,10 +11,11 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  increment,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Exercise, Registro, Rutina, RutinaItem } from '@/types';
+import type { ActividadGuardada, Exercise, Registro, Rutina, RutinaItem } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -54,18 +55,86 @@ export async function addEjercicio(
   return ref.id;
 }
 
+export async function getEjercicio(id: string): Promise<Exercise | null> {
+  const snap = await getDoc(doc(db, 'ejercicios', id));
+  if (!snap.exists()) return null;
+  const data = snap.data();
+  return {
+    id:          snap.id,
+    titulo:      data.titulo,
+    tipo:        data.tipo,
+    url:         data.url,
+    miniatura:   data.miniatura,
+    categoria:   data.categoria,
+    duracionMin: data.duracionMin,
+    notas:       data.notas,
+    createdAt:   (data.createdAt as Timestamp)?.toDate() ?? new Date(),
+  } as Exercise;
+}
+
 export async function deleteEjercicio(id: string): Promise<void> {
   await deleteDoc(doc(db, 'ejercicios', id));
 }
 
-/** Registra un entrenamiento libre de hoy (no ligado a un video de la biblioteca). */
+/** Registra un entrenamiento libre de hoy (no ligado a un video de la biblioteca).
+ *  Si tiene nombre, lo auto-guarda como pill reutilizable. */
 export async function registrarActividad(nombre?: string): Promise<string> {
+  const limpio = nombre?.trim();
   const ref = await addDoc(collection(db, 'registros'), {
-    actividad:    nombre?.trim() || 'Entrenamiento',
+    actividad:    limpio || 'Entrenamiento',
     fecha:        todayStr(),
     completadoAt: serverTimestamp(),
   });
+  if (limpio) {
+    // No bloquea el registro si falla el guardado de la pill.
+    guardarActividad(limpio).catch(() => {});
+  }
   return ref.id;
+}
+
+// ─── Actividades guardadas (pills reutilizables) ────────────────────────────────
+
+/** Auto-guarda (o incrementa el uso de) una actividad libre para reutilizarla. */
+export async function guardarActividad(nombre: string): Promise<void> {
+  const limpio = nombre.trim();
+  if (!limpio) return;
+  const snap = await getDocs(
+    query(collection(db, 'actividadesGuardadas'), where('nombre', '==', limpio))
+  );
+  if (snap.empty) {
+    await addDoc(collection(db, 'actividadesGuardadas'), {
+      nombre:    limpio,
+      usos:      1,
+      ultimoUso: serverTimestamp(),
+    });
+  } else {
+    await updateDoc(snap.docs[0].ref, {
+      usos:      increment(1),
+      ultimoUso: serverTimestamp(),
+    });
+  }
+}
+
+/** Lista las actividades guardadas, ordenadas por más usadas y recientes. */
+export async function getActividadesGuardadas(): Promise<ActividadGuardada[]> {
+  const snap = await getDocs(collection(db, 'actividadesGuardadas'));
+  return snap.docs
+    .map((d) => {
+      const data = d.data();
+      return {
+        id:        d.id,
+        nombre:    data.nombre as string,
+        usos:      (data.usos as number) ?? 1,
+        ultimoUso: (data.ultimoUso as Timestamp)?.toDate() ?? new Date(0),
+      } as ActividadGuardada;
+    })
+    .sort((a, b) =>
+      b.usos !== a.usos ? b.usos - a.usos : b.ultimoUso.getTime() - a.ultimoUso.getTime()
+    );
+}
+
+export async function eliminarActividadGuardada(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'actividadesGuardadas', id));
 }
 
 // ─── Registros ────────────────────────────────────────────────────────────────

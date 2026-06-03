@@ -21,6 +21,14 @@ export interface Registro {
   completadoAt: Date;
 }
 
+/** Actividad libre guardada para reutilizar como pill (auto-guardada al escribirla). */
+export interface ActividadGuardada {
+  id: string;
+  nombre: string;
+  usos: number;           // veces marcada (para ordenar por más usadas)
+  ultimoUso: Date;
+}
+
 // ─── Rutinas (varios videos bajo un mismo entrenamiento) ────────────────────────
 
 export const FASES = ['Calentamiento', 'Normal', 'Enfriamiento'] as const;
