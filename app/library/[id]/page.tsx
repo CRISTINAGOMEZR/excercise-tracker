@@ -3,154 +3,121 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
-import Nav from '@/components/Nav';
-import Celebration from '@/components/Celebration';
-import { getEjercicio, getRegistrosHoy, marcarHecho, desmarcarHecho } from '@/lib/firestore';
-import { getEmbedUrl, isVerticalEmbed } from '@/lib/videoUtils';
-import type { Exercise } from '@/types';
+import GuidedSession, { type PlayItem } from '@/components/GuidedSession';
+import {
+  getEjercicio,
+  getRutina,
+  getRegistrosHoy,
+  marcarHecho,
+  marcarRutinaHecha,
+} from '@/lib/firestore';
+import type { Exercise, Rutina } from '@/types';
+import { ORDEN_FASE } from '@/types';
 
-export default function ExerciseDetailPage() {
+type Loaded =
+  | { kind: 'exercise'; ex: Exercise }
+  | { kind: 'rutina'; rut: Rutina }
+  | null;
+
+export default function DetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = String(params.id);
 
-  const [ex, setEx] = useState<Exercise | null>(null);
+  const [data, setData] = useState<Loaded>(null);
   const [loading, setLoading] = useState(true);
-  const [doneRegId, setDoneRegId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [celebrate, setCelebrate] = useState(0);
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     async function load() {
-      const [e, regs] = await Promise.all([getEjercicio(id), getRegistrosHoy()]);
-      setEx(e);
-      const reg = regs.find((r) => r.ejercicioId === id);
-      setDoneRegId(reg ? reg.id : null);
+      const [ex, regs] = await Promise.all([getEjercicio(id), getRegistrosHoy()]);
+      if (ex) {
+        setData({ kind: 'exercise', ex });
+        setDone(regs.some((r) => r.ejercicioId === id));
+      } else {
+        const rut = await getRutina(id);
+        if (rut) {
+          setData({ kind: 'rutina', rut });
+          setDone(regs.some((r) => r.rutinaId === id));
+        }
+      }
       setLoading(false);
     }
     load();
   }, [id]);
 
-  const done = doneRegId !== null;
-
-  async function toggleDone() {
-    if (!ex || saving) return;
-    setSaving(true);
-    if (done && doneRegId) {
-      await desmarcarHecho(doneRegId);
-      setDoneRegId(null);
-    } else {
-      setCelebrate((n) => n + 1);
-      const newId = await marcarHecho(ex.id);
-      setDoneRegId(newId);
-    }
-    setSaving(false);
+  if (loading) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg)' }}>
+          <div className="w-6 h-6 rounded-full border-2 border-current border-t-transparent animate-spin opacity-30" />
+        </div>
+      </AuthGuard>
+    );
   }
 
-  const embedUrl = ex?.tipo === 'link' ? getEmbedUrl(ex.url) : null;
-  const vertical = ex?.tipo === 'link' && isVerticalEmbed(ex.url);
+  if (!data) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-5 text-center" style={{ backgroundColor: 'var(--color-bg)' }}>
+          <p className="text-5xl opacity-20">◫</p>
+          <p style={{ color: 'var(--color-muted)' }}>No se encontró este contenido.</p>
+          <a href="/library" className="inline-block text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
+            Volver a la biblioteca
+          </a>
+        </div>
+      </AuthGuard>
+    );
+  }
+
+  if (data.kind === 'exercise') {
+    const { ex } = data;
+    const items: PlayItem[] = [
+      { id: ex.id, nombre: ex.titulo, tipo: ex.tipo, url: ex.url, notas: ex.notas },
+    ];
+    return (
+      <AuthGuard>
+        <GuidedSession
+          titulo={ex.titulo}
+          subtitulo={ex.categoria}
+          thumbnail={ex.miniatura ?? null}
+          duracionMin={ex.duracionMin}
+          notas={ex.notas}
+          items={items}
+          done={done}
+          onComplete={() => { marcarHecho(ex.id).catch(() => {}); }}
+          onBack={() => router.back()}
+        />
+      </AuthGuard>
+    );
+  }
+
+  // Rutina
+  const { rut } = data;
+  const ordenados = [...rut.items].sort((a, b) => ORDEN_FASE[a.fase] - ORDEN_FASE[b.fase]);
+  const items: PlayItem[] = ordenados.map((it) => ({
+    id: it.id,
+    nombre: it.nombre,
+    tipo: it.tipo,
+    url: it.url,
+    fase: it.fase,
+    notas: it.notas,
+  }));
+  const thumbnail = ordenados.find((it) => it.miniatura)?.miniatura ?? null;
+  const duracionMin = ordenados.reduce((sum, it) => sum + (it.duracionMin ?? 0), 0) || undefined;
 
   return (
     <AuthGuard>
-      <Celebration trigger={celebrate} />
-      <div className="min-h-screen pb-32" style={{ backgroundColor: 'var(--color-bg)' }}>
-        <header className="px-5 pt-12 pb-4 flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="w-11 h-11 flex items-center justify-center rounded-full"
-            style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-muted)' }}
-            aria-label="Volver"
-          >
-            ←
-          </button>
-          <h1 className="text-xs uppercase tracking-widest" style={{ color: 'var(--color-muted)' }}>
-            Ejercicio
-          </h1>
-        </header>
-
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-6 h-6 rounded-full border-2 border-current border-t-transparent animate-spin opacity-30" />
-          </div>
-        ) : !ex ? (
-          <div className="text-center py-20 space-y-3">
-            <p className="text-5xl opacity-20">◫</p>
-            <p style={{ color: 'var(--color-muted)' }}>No se encontró este ejercicio.</p>
-            <a href="/library" className="inline-block text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
-              Volver a la biblioteca
-            </a>
-          </div>
-        ) : (
-          <main className="px-5 space-y-5">
-            {/* Video */}
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
-              {ex.tipo === 'link' && embedUrl ? (
-                <iframe
-                  src={embedUrl}
-                  className="w-full"
-                  style={vertical ? { aspectRatio: '9/16', maxHeight: '70vh' } : { aspectRatio: '16/9' }}
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                  title={ex.titulo}
-                />
-              ) : (
-                <video
-                  src={ex.url}
-                  controls
-                  playsInline
-                  className="w-full"
-                  style={{ maxHeight: '70vh', backgroundColor: '#000' }}
-                />
-              )}
-            </div>
-
-            {/* Info */}
-            <div>
-              <h2 className="text-3xl leading-tight" style={{ fontFamily: 'var(--font-cormorant)', color: 'var(--color-text)' }}>
-                {ex.titulo}
-              </h2>
-              <p className="text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
-                {ex.categoria}
-                {ex.duracionMin ? ` · ${ex.duracionMin} min` : ''}
-              </p>
-            </div>
-
-            {ex.notas && (
-              <div
-                className="rounded-2xl p-4 text-sm leading-relaxed"
-                style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
-              >
-                {ex.notas}
-              </div>
-            )}
-          </main>
-        )}
-      </div>
-
-      {/* CTA fija: marcar hecho hoy */}
-      {!loading && ex && (
-        <div
-          className="fixed bottom-20 left-0 right-0 px-5 z-40"
-          style={{ pointerEvents: 'none' }}
-        >
-          <button
-            onClick={toggleDone}
-            disabled={saving}
-            className="w-full py-4 rounded-2xl font-medium text-sm transition-all disabled:opacity-60 border"
-            style={{
-              pointerEvents: 'auto',
-              backgroundColor: done ? 'var(--color-done-bg)' : 'var(--color-accent)',
-              borderColor: done ? '#c5d9bf' : 'var(--color-accent)',
-              color: done ? 'var(--color-text)' : 'white',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-            }}
-          >
-            {saving ? 'Guardando…' : done ? '✓ Hecho hoy · toca para deshacer' : '✓ Marcar hecho hoy'}
-          </button>
-        </div>
-      )}
-
-      <Nav />
+      <GuidedSession
+        titulo={rut.titulo}
+        subtitulo="Rutina"
+        thumbnail={thumbnail}
+        duracionMin={duracionMin}
+        items={items}
+        done={done}
+        onComplete={() => { marcarRutinaHecha(rut.id).catch(() => {}); }}
+        onBack={() => router.back()}
+      />
     </AuthGuard>
   );
 }

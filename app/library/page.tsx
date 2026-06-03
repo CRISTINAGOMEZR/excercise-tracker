@@ -6,7 +6,6 @@ import AuthGuard from '@/components/AuthGuard';
 import Nav from '@/components/Nav';
 import ExerciseCard from '@/components/ExerciseCard';
 import RoutineCard from '@/components/RoutineCard';
-import RoutinePlayer from '@/components/RoutinePlayer';
 import {
   getEjercicios,
   getRutinas,
@@ -24,7 +23,6 @@ export default function LibraryPage() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [rutinas, setRutinas] = useState<Rutina[]>([]);
   const [registros, setRegistros] = useState<Registro[]>([]);
-  const [playingRutina, setPlayingRutina] = useState<Rutina | null>(null);
   const [filter, setFilter] = useState<string>('Todas');
   const [loading, setLoading] = useState(true);
 
@@ -78,10 +76,6 @@ export default function LibraryPage() {
     }
   }
 
-  async function handleCompleteRutina(rut: Rutina) {
-    if (!rutinaDone(rut.id)) await handleToggleRutina(rut);
-  }
-
   async function handleDeleteRutina(rut: Rutina) {
     if (!confirm(`¿Borrar la rutina "${rut.titulo}"?`)) return;
     await deleteRutina(rut.id);
@@ -133,7 +127,7 @@ export default function LibraryPage() {
                         key={rut.id}
                         rutina={rut}
                         done={rutinaDone(rut.id)}
-                        onPlay={() => setPlayingRutina(rut)}
+                        onPlay={() => router.push(`/library/${rut.id}`)}
                         onToggle={() => handleToggleRutina(rut)}
                         onEdit={() => router.push(`/add?edit=${rut.id}`)}
                         onDelete={() => handleDeleteRutina(rut)}
@@ -187,14 +181,6 @@ export default function LibraryPage() {
           )}
         </main>
       </div>
-
-      {playingRutina && (
-        <RoutinePlayer
-          rutina={playingRutina}
-          onClose={() => setPlayingRutina(null)}
-          onComplete={() => handleCompleteRutina(playingRutina)}
-        />
-      )}
 
       <Nav />
     </AuthGuard>

@@ -76,3 +76,19 @@ export function getLoopEmbedUrl(url: string): string | null {
   if (ig) return `https://www.instagram.com/${ig.type}/${ig.code}/embed`;
   return null;
 }
+
+/**
+ * URL embed para el reproductor guiado: autoplay + loop, con el silencio
+ * controlable (para el botón mutear/desmutear).
+ */
+export function getGuidedEmbedUrl(url: string, muted: boolean): string | null {
+  const m = muted ? 1 : 0;
+  const yt = getYouTubeId(url);
+  if (yt)
+    return `https://www.youtube.com/embed/${yt}?autoplay=1&mute=${m}&loop=1&playlist=${yt}&rel=0&playsinline=1&controls=1`;
+  const vm = getVimeoId(url);
+  if (vm) return `https://player.vimeo.com/video/${vm}?autoplay=1&loop=1&muted=${m}`;
+  const ig = getInstagram(url);
+  if (ig) return `https://www.instagram.com/${ig.type}/${ig.code}/embed`;
+  return null;
+}
