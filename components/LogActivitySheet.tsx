@@ -65,7 +65,7 @@ export default function LogActivitySheet({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       {/* Backdrop */}
       <button
         onClick={onClose}
@@ -107,74 +107,11 @@ export default function LogActivitySheet({
         </div>
 
         <div className="overflow-y-auto px-5 pb-8 space-y-6">
-          {/* ── Zona 1: escribir nueva ─────────────────────────── */}
-          <div>
-            <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--color-muted)' }}>
-              Escribe lo que hiciste
-            </label>
-            <div className="flex gap-2">
-              <input
-                autoFocus
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleFree(); }}
-                placeholder="ej. Correr 30 min"
-                className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
-                style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
-              />
-              <button
-                onClick={handleFree}
-                disabled={!text.trim()}
-                className="px-4 rounded-xl text-white text-sm font-medium disabled:opacity-40"
-                style={{ backgroundColor: 'var(--color-accent)' }}
-              >
-                ✓
-              </button>
-            </div>
-            <p className="text-[11px] mt-1.5" style={{ color: 'var(--color-muted)' }}>
-              Se guarda para reusarla la próxima vez.
-            </p>
-          </div>
-
-          {/* ── Zona 2: pills guardadas ────────────────────────── */}
-          {saved.length > 0 && (
-            <div>
-              <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--color-muted)' }}>
-                Tus actividades
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {saved.map((a) => (
-                  <div
-                    key={a.id}
-                    className="flex items-center rounded-full overflow-hidden"
-                    style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-                  >
-                    <button
-                      onClick={() => tapPill(a)}
-                      className="pl-4 pr-2 py-2 text-sm"
-                      style={{ color: 'var(--color-text)' }}
-                    >
-                      {a.nombre}
-                    </button>
-                    <button
-                      onClick={() => onDeleteSaved(a)}
-                      className="pr-3 pl-1 py-2 text-xs"
-                      style={{ color: 'var(--color-muted)' }}
-                      aria-label={`Borrar ${a.nombre}`}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Zona 3: elegir de biblioteca ───────────────────── */}
+          {/* ── Zona 1: elegir de biblioteca ───────────────────── */}
           {(exercises.length > 0 || rutinas.length > 0) && (
             <div>
               <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--color-muted)' }}>
-                O elige de tu biblioteca
+                Elige de tu biblioteca
               </label>
               <input
                 value={search}
@@ -257,6 +194,68 @@ export default function LogActivitySheet({
               </div>
             </div>
           )}
+
+          {/* ── Zona 2: pills guardadas ────────────────────────── */}
+          {saved.length > 0 && (
+            <div>
+              <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--color-muted)' }}>
+                Tus actividades
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {saved.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center rounded-full overflow-hidden"
+                    style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+                  >
+                    <button
+                      onClick={() => tapPill(a)}
+                      className="pl-4 pr-2 py-2 text-sm"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      {a.nombre}
+                    </button>
+                    <button
+                      onClick={() => onDeleteSaved(a)}
+                      className="pr-3 pl-1 py-2 text-xs"
+                      style={{ color: 'var(--color-muted)' }}
+                      aria-label={`Borrar ${a.nombre}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Zona 3: escribir nueva (al final, no abre teclado de una) ── */}
+          <div>
+            <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--color-muted)' }}>
+              O escribe lo que hiciste
+            </label>
+            <div className="flex gap-2">
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleFree(); }}
+                placeholder="ej. Correr 30 min"
+                className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
+                style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+              />
+              <button
+                onClick={handleFree}
+                disabled={!text.trim()}
+                className="px-4 rounded-xl text-white text-sm font-medium disabled:opacity-40"
+                style={{ backgroundColor: 'var(--color-accent)' }}
+              >
+                ✓
+              </button>
+            </div>
+            <p className="text-[11px] mt-1.5" style={{ color: 'var(--color-muted)' }}>
+              Se guarda para reusarla la próxima vez.
+            </p>
+          </div>
         </div>
       </div>
     </div>
