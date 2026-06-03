@@ -1,6 +1,7 @@
 'use client';
 
 import { ORDEN_FASE, type Fase, type Rutina } from '@/types';
+import { IconPlay, IconCheck, IconVideo } from '@/components/icons';
 
 const FASE_COLOR: Record<Fase, string> = {
   Calentamiento: '#d99a6c',
@@ -12,11 +13,9 @@ interface Props {
   rutina: Rutina;
   done: boolean;
   onOpen: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
 }
 
-export default function RoutineCard({ rutina, done, onOpen, onEdit, onDelete }: Props) {
+export default function RoutineCard({ rutina, done, onOpen }: Props) {
   const items = [...rutina.items].sort((a, b) => ORDEN_FASE[a.fase] - ORDEN_FASE[b.fase]);
   const thumb = items.find((i) => i.miniatura)?.miniatura ?? null;
 
@@ -41,50 +40,30 @@ export default function RoutineCard({ rutina, done, onOpen, onEdit, onDelete }: 
           // eslint-disable-next-line @next/next/no-img-element
           <img src={thumb} alt={rutina.titulo} className="absolute inset-0 w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-3xl" style={{ backgroundColor: 'var(--color-border)' }}>
-            ▶
+          <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-border)', color: 'var(--color-muted)' }}>
+            <IconPlay size={28} />
           </div>
         )}
-
-        {/* Editar / borrar arriba a la izquierda */}
-        <div className="absolute top-2 left-2 flex items-center gap-1.5">
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow"
-            style={{ backgroundColor: 'rgba(255,255,255,0.92)', color: 'var(--color-text)' }}
-            aria-label={`Editar ${rutina.titulo}`}
-          >
-            ✏️
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow"
-            style={{ backgroundColor: 'rgba(255,255,255,0.92)', color: '#b56f54' }}
-            aria-label={`Borrar ${rutina.titulo}`}
-          >
-            🗑️
-          </button>
-        </div>
 
         {/* Badge nº de videos */}
         <div
           className="absolute bottom-2 left-2 text-xs px-2 py-1 rounded-full text-white font-medium flex items-center gap-1"
           style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
         >
-          ▦ {items.length} video{items.length !== 1 ? 's' : ''}
+          <IconVideo size={14} /> {items.length} video{items.length !== 1 ? 's' : ''}
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-          <div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center">
-            <span className="text-xl ml-1">▶</span>
+          <div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center" style={{ color: 'var(--color-text)' }}>
+            <IconPlay size={20} />
           </div>
         </div>
         {done && (
           <div
-            className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-white text-sm shadow"
+            className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-white shadow"
             style={{ backgroundColor: 'var(--color-accent)' }}
           >
-            ✓
+            <IconCheck size={16} />
           </div>
         )}
       </div>
@@ -96,7 +75,7 @@ export default function RoutineCard({ rutina, done, onOpen, onEdit, onDelete }: 
         >
           {rutina.titulo}
         </h3>
-        <div className="flex flex-wrap gap-1.5 mt-1">
+        <div className="flex flex-wrap items-center gap-1.5 mt-1">
           {fases.map(({ f, n }) => (
             <span
               key={f}
@@ -107,8 +86,8 @@ export default function RoutineCard({ rutina, done, onOpen, onEdit, onDelete }: 
             </span>
           ))}
           {done && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ color: 'var(--color-accent)' }}>
-              ✓ hecho hoy
+            <span className="text-[10px] inline-flex items-center gap-0.5" style={{ color: 'var(--color-accent)' }}>
+              <IconCheck size={12} /> hecho hoy
             </span>
           )}
         </div>

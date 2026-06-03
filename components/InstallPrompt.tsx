@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { IconClose, IconInstall } from '@/components/icons';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -52,7 +53,7 @@ export default function InstallPrompt() {
       className="rounded-2xl p-3 flex items-center gap-3"
       style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
     >
-      <span className="text-2xl leading-none">📲</span>
+      <span className="leading-none" style={{ color: 'var(--color-accent)' }}><IconInstall size={28} /></span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
           Instala la app
@@ -74,7 +75,7 @@ export default function InstallPrompt() {
         style={{ color: 'var(--color-muted)' }}
         aria-label="Cerrar"
       >
-        ✕
+        <IconClose size={18} />
       </button>
     </div>
   );

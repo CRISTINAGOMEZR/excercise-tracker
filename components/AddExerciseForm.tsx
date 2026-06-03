@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { addEjercicio, updateEjercicio } from '@/lib/firestore';
 import { uploadVideo } from '@/lib/storage';
 import { isValidVideoLink, getProvider } from '@/lib/videoUtils';
+import { IconCheck, IconPlay } from '@/components/icons';
 import { CATEGORIAS, type Categoria, type Exercise } from '@/types';
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -216,7 +217,7 @@ export default function AddExerciseForm({ initial }: { initial?: Exercise }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={fetchedThumb} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xl opacity-40">▶</div>
+                  <div className="w-full h-full flex items-center justify-center opacity-40"><IconPlay size={20} /></div>
                 )}
               </div>
               <div className="min-w-0 flex flex-col justify-center">
@@ -224,7 +225,7 @@ export default function AddExerciseForm({ initial }: { initial?: Exercise }) {
                   className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide font-medium mb-0.5"
                   style={{ color: 'var(--color-accent)' }}
                 >
-                  ✓ {PROVIDER_LABEL[fetchedProvider] ?? 'Video'} detectado
+                  <IconCheck size={12} /> {PROVIDER_LABEL[fetchedProvider] ?? 'Video'} detectado
                 </span>
                 <p className="text-sm leading-snug line-clamp-2" style={{ color: 'var(--color-text)' }}>
                   {titulo || 'Listo para guardar'}

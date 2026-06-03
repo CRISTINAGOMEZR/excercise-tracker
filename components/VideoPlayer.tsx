@@ -1,6 +1,7 @@
 'use client';
 
 import { getEmbedUrl, isVerticalEmbed } from '@/lib/videoUtils';
+import { IconClose } from '@/components/icons';
 import type { Exercise } from '@/types';
 
 interface Props {
@@ -30,10 +31,10 @@ export default function VideoPlayer({ exercise, onClose }: Props) {
         </div>
         <button
           onClick={onClose}
-          className="text-white opacity-60 hover:opacity-100 transition-opacity text-2xl flex items-center justify-center w-11 h-11"
+          className="text-white opacity-60 hover:opacity-100 transition-opacity flex items-center justify-center w-11 h-11"
           aria-label="Cerrar"
         >
-          ✕
+          <IconClose size={24} />
         </button>
       </div>
 

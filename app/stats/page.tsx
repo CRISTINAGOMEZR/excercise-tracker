@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import Nav from '@/components/Nav';
 import Heatmap from '@/components/Heatmap';
+import { IconFire } from '@/components/icons';
 import { getEjercicios, getRegistrosTodos, getRachaActual, getTotalSemana } from '@/lib/firestore';
 import {
   countByDate,
@@ -46,7 +47,7 @@ export default function StatsPage() {
   const logros = calcularLogros({ total, rachaMax });
   const maxCat = categorias[0]?.count ?? 1;
 
-  const stat = (valor: number | string, label: string) => (
+  const stat = (valor: React.ReactNode, label: string) => (
     <div
       className="flex-1 rounded-2xl px-4 py-4 text-center"
       style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
@@ -76,7 +77,7 @@ export default function StatsPage() {
             {/* Resumen */}
             <div className="space-y-4">
               <div className="flex gap-3">
-                {stat(`🔥 ${rachaAct}`, 'racha actual')}
+                {stat(<span className="inline-flex items-center gap-1.5"><IconFire size={22} />{rachaAct}</span>, 'racha actual')}
                 {stat(rachaMax, 'racha más larga')}
               </div>
               <div className="flex gap-3">

@@ -1,6 +1,7 @@
 'use client';
 
 import { youtubeThumbnail, getYouTubeId } from '@/lib/videoUtils';
+import { IconPlay, IconCheck, IconCircle } from '@/components/icons';
 import type { Exercise } from '@/types';
 
 interface Props {
@@ -9,13 +10,11 @@ interface Props {
   /** Click en cualquier parte de la card (abrir detalle o reproducir). */
   onOpen?: () => void;
   onPlay?: () => void;
-  /** Lápiz de edición arriba a la izquierda (solo si se provee). */
-  onEdit?: () => void;
   /** Botón redondo de marcar/desmarcar (solo si se provee). */
   onToggle?: () => void;
 }
 
-export default function ExerciseCard({ exercise, done, onOpen, onPlay, onEdit, onToggle }: Props) {
+export default function ExerciseCard({ exercise, done, onOpen, onPlay, onToggle }: Props) {
   const thumbnail =
     exercise.miniatura ||
     (exercise.tipo === 'link' && getYouTubeId(exercise.url)
@@ -46,39 +45,27 @@ export default function ExerciseCard({ exercise, done, onOpen, onPlay, onEdit, o
           />
         ) : (
           <div
-            className="w-full h-full flex items-center justify-center text-3xl"
-            style={{ backgroundColor: 'var(--color-border)' }}
+            className="w-full h-full flex items-center justify-center"
+            style={{ backgroundColor: 'var(--color-border)', color: 'var(--color-muted)' }}
           >
-            ▶
+            <IconPlay size={28} />
           </div>
-        )}
-
-        {/* Editar (lápiz) arriba a la izquierda */}
-        {onEdit && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center text-sm shadow"
-            style={{ backgroundColor: 'rgba(255,255,255,0.92)', color: 'var(--color-text)' }}
-            aria-label={`Editar ${exercise.titulo}`}
-          >
-            ✏️
-          </button>
         )}
 
         {/* Play overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-          <div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center">
-            <span className="text-xl ml-1">▶</span>
+          <div className="w-12 h-12 rounded-full bg-white/80 flex items-center justify-center" style={{ color: 'var(--color-text)' }}>
+            <IconPlay size={20} />
           </div>
         </div>
 
         {/* Done badge */}
         {done && (
           <div
-            className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-medium shadow"
+            className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-white shadow"
             style={{ backgroundColor: 'var(--color-accent)' }}
           >
-            ✓
+            <IconCheck size={16} />
           </div>
         )}
       </div>
@@ -92,10 +79,16 @@ export default function ExerciseCard({ exercise, done, onOpen, onPlay, onEdit, o
           >
             {exercise.titulo}
           </h3>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>
-            {exercise.categoria}
-            {exercise.duracionMin ? ` · ${exercise.duracionMin} min` : ''}
-            {done && !onToggle ? ' · ✓ hecho hoy' : ''}
+          <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--color-muted)' }}>
+            <span>
+              {exercise.categoria}
+              {exercise.duracionMin ? ` · ${exercise.duracionMin} min` : ''}
+            </span>
+            {done && !onToggle && (
+              <span className="inline-flex items-center gap-0.5" style={{ color: 'var(--color-accent)' }}>
+                · <IconCheck size={12} /> hecho hoy
+              </span>
+            )}
           </p>
         </div>
 
@@ -111,7 +104,7 @@ export default function ExerciseCard({ exercise, done, onOpen, onPlay, onEdit, o
             }}
             aria-label={done ? 'Desmarcar' : 'Marcar como hecho'}
           >
-            {done ? '✓' : '○'}
+            {done ? <IconCheck size={18} /> : <IconCircle size={18} />}
           </button>
         )}
       </div>

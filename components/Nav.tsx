@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { IconToday, IconLibrary, IconStats, IconAdd } from '@/components/icons';
 
 const links = [
-  { href: '/today',   label: 'Hoy',        icon: '◎' },
-  { href: '/library', label: 'Biblioteca', icon: '◫' },
-  { href: '/stats',   label: 'Progreso',   icon: '▥' },
-  { href: '/add',     label: 'Agregar',    icon: '+' },
+  { href: '/today',   label: 'Hoy',        Icon: IconToday },
+  { href: '/library', label: 'Biblioteca', Icon: IconLibrary },
+  { href: '/stats',   label: 'Progreso',   Icon: IconStats },
+  { href: '/add',     label: 'Agregar',    Icon: IconAdd },
 ];
 
 export default function Nav() {
@@ -22,19 +23,19 @@ export default function Nav() {
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      {links.map(({ href, label, icon }) => {
+      {links.map(({ href, label, Icon }) => {
         const active = pathname.startsWith(href);
         return (
           <Link
             key={href}
             href={href}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 py-3 text-xs transition-colors"
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 text-xs transition-colors"
             style={{
               color: active ? 'var(--color-accent)' : 'var(--color-muted)',
               fontFamily: 'var(--font-dm-sans)',
             }}
           >
-            <span className="text-lg leading-none">{icon}</span>
+            <Icon size={20} />
             <span>{label}</span>
           </Link>
         );

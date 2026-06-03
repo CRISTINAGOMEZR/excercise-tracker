@@ -2,6 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { getGuidedEmbedUrl, isVerticalEmbed } from '@/lib/videoUtils';
+import {
+  IconBack, IconNext, IconCheck, IconClose, IconPlay,
+  IconMute, IconUnmute, IconFullscreen, IconTrophy, IconEdit, IconDelete,
+} from '@/components/icons';
 import type { Fase, VideoType } from '@/types';
 
 const FASE_COLOR: Record<Fase, string> = {
@@ -29,6 +33,8 @@ interface Props {
   done: boolean;
   onComplete: () => void;
   onBack: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 type Phase = 'intro' | 'countdown' | 'playing' | 'finished';
@@ -43,6 +49,8 @@ export default function GuidedSession({
   done,
   onComplete,
   onBack,
+  onEdit,
+  onDelete,
 }: Props) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [index, setIndex] = useState(0);
@@ -141,7 +149,7 @@ export default function GuidedSession({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={thumbnail} alt={titulo} className="absolute inset-0 w-full h-full object-cover" />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-30">▶</div>
+            <div className="absolute inset-0 flex items-center justify-center opacity-30"><IconPlay size={48} /></div>
           )}
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.35), transparent 45%)' }} />
           <button
@@ -150,14 +158,39 @@ export default function GuidedSession({
             style={{ backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--color-text)' }}
             aria-label="Volver"
           >
-            ←
+            <IconBack size={20} />
           </button>
+
+          {/* Editar / borrar arriba a la derecha de la foto */}
+          <div className="absolute top-12 right-5 flex items-center gap-2">
+            {onEdit && (
+              <button
+                onClick={onEdit}
+                className="w-11 h-11 flex items-center justify-center rounded-full"
+                style={{ backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--color-text)' }}
+                aria-label="Editar"
+              >
+                <IconEdit size={20} />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={onDelete}
+                className="w-11 h-11 flex items-center justify-center rounded-full"
+                style={{ backgroundColor: 'rgba(255,255,255,0.9)', color: '#b56f54' }}
+                aria-label="Borrar"
+              >
+                <IconDelete size={20} />
+              </button>
+            )}
+          </div>
+
           {done && (
             <div
-              className="absolute top-12 right-5 px-3 py-1.5 rounded-full text-xs font-medium text-white"
+              className="absolute bottom-3 left-5 px-3 py-1.5 rounded-full text-xs font-medium text-white flex items-center gap-1"
               style={{ backgroundColor: 'var(--color-accent)' }}
             >
-              ✓ Completado hoy
+              <IconCheck size={14} /> Completado hoy
             </div>
           )}
         </div>
@@ -210,10 +243,10 @@ export default function GuidedSession({
           <button
             onClick={start}
             disabled={total === 0}
-            className="w-full py-4 rounded-2xl text-white font-medium text-base disabled:opacity-50"
+            className="w-full py-4 rounded-2xl text-white font-medium text-base disabled:opacity-50 flex items-center justify-center gap-2"
             style={{ pointerEvents: 'auto', backgroundColor: 'var(--color-accent)', boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}
           >
-            ▶ Comenzar
+            <IconPlay size={18} /> Comenzar
           </button>
         </div>
       </div>
@@ -259,27 +292,27 @@ export default function GuidedSession({
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={() => setMuted((m) => !m)}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
             aria-label={muted ? 'Activar sonido' : 'Silenciar'}
           >
-            {muted ? '🔇' : '🔊'}
+            {muted ? <IconMute size={20} /> : <IconUnmute size={20} />}
           </button>
           <button
             onClick={toggleFullscreen}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
             aria-label="Pantalla completa"
           >
-            ⛶
+            <IconFullscreen size={20} />
           </button>
           <button
             onClick={() => setConfirmExit(true)}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xl"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
             aria-label="Salir"
           >
-            ✕
+            <IconClose size={20} />
           </button>
         </div>
       </div>
@@ -316,7 +349,9 @@ export default function GuidedSession({
           </div>
         ) : phase === 'finished' ? (
           <div className="text-center px-6">
-            <p className="text-6xl mb-4">🎉</p>
+            <div className="flex justify-center mb-4" style={{ color: 'var(--color-accent)' }}>
+              <IconTrophy size={64} />
+            </div>
             <h2 className="text-white text-3xl mb-2" style={{ fontFamily: 'var(--font-cormorant)' }}>
               ¡Terminaste!
             </h2>
@@ -366,10 +401,10 @@ export default function GuidedSession({
         {phase === 'finished' ? (
           <button
             onClick={complete}
-            className="w-full py-4 rounded-2xl text-white font-medium text-base"
+            className="w-full py-4 rounded-2xl text-white font-medium text-base flex items-center justify-center gap-2"
             style={{ backgroundColor: 'var(--color-accent)' }}
           >
-            ✓ Marcar como completado
+            <IconCheck size={18} /> Marcar como completado
           </button>
         ) : phase === 'playing' ? (
           <div className="flex items-center gap-3">
@@ -377,27 +412,27 @@ export default function GuidedSession({
               <button
                 onClick={prev}
                 disabled={isFirst}
-                className="px-5 py-3 rounded-2xl text-white text-sm font-medium disabled:opacity-30"
+                className="px-5 py-3 rounded-2xl text-white text-sm font-medium disabled:opacity-30 flex items-center gap-1.5"
                 style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
               >
-                ← Anterior
+                <IconBack size={16} /> Anterior
               </button>
             )}
             {isLast ? (
               <button
                 onClick={() => { clearTimer(); setPhase('finished'); }}
-                className="flex-1 py-3 rounded-2xl text-white font-medium text-sm"
+                className="flex-1 py-3 rounded-2xl text-white font-medium text-sm flex items-center justify-center gap-1.5"
                 style={{ backgroundColor: 'var(--color-accent)' }}
               >
-                {multi ? 'Terminar ✓' : 'Listo, completar ✓'}
+                {multi ? 'Terminar' : 'Listo, completar'} <IconCheck size={16} />
               </button>
             ) : (
               <button
                 onClick={next}
-                className="flex-1 py-3 rounded-2xl text-white font-medium text-sm"
+                className="flex-1 py-3 rounded-2xl text-white font-medium text-sm flex items-center justify-center gap-1.5"
                 style={{ backgroundColor: 'var(--color-accent)' }}
               >
-                Siguiente →
+                Siguiente <IconNext size={16} />
               </button>
             )}
           </div>
@@ -423,17 +458,17 @@ export default function GuidedSession({
             <div className="px-5 pt-4 pb-6 space-y-2">
               <button
                 onClick={() => setConfirmExit(false)}
-                className="w-full py-4 rounded-2xl text-sm font-medium"
+                className="w-full py-4 rounded-2xl text-sm font-medium flex items-center justify-center gap-2"
                 style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
               >
-                ▶ Volver al entrenamiento
+                <IconPlay size={16} /> Volver al entrenamiento
               </button>
               <button
                 onClick={complete}
-                className="w-full py-4 rounded-2xl text-white text-sm font-medium"
+                className="w-full py-4 rounded-2xl text-white text-sm font-medium flex items-center justify-center gap-2"
                 style={{ backgroundColor: 'var(--color-accent)' }}
               >
-                ✓ Marcar como completado
+                <IconCheck size={16} /> Marcar como completado
               </button>
               <button
                 onClick={exitToIntro}

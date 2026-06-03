@@ -9,6 +9,7 @@ import Celebration from '@/components/Celebration';
 import InstallPrompt from '@/components/InstallPrompt';
 import NotificationToggle from '@/components/NotificationToggle';
 import LogActivitySheet from '@/components/LogActivitySheet';
+import { IconAdd, IconFire, IconCheck, IconClose, IconLibrary } from '@/components/icons';
 import {
   getEjercicios,
   getRutinas,
@@ -200,8 +201,8 @@ export default function TodayPage() {
                     style={{ transition: 'stroke-dashoffset 0.6s ease' }}
                   />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl leading-none">🔥</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ color: 'var(--color-accent)' }}>
+                  <IconFire size={28} />
                   <span
                     className="text-xl leading-none mt-0.5"
                     style={{ fontFamily: 'var(--font-cormorant)', color: 'var(--color-accent)' }}
@@ -228,7 +229,7 @@ export default function TodayPage() {
               className="w-full py-4 rounded-2xl text-white font-medium text-sm flex items-center justify-center gap-2"
               style={{ backgroundColor: 'var(--color-accent)' }}
             >
-              <span className="text-lg leading-none">＋</span>
+              <IconAdd size={18} />
               Registrar entrenamiento de hoy
             </button>
 
@@ -277,14 +278,16 @@ export default function TodayPage() {
                         className="flex items-center gap-2 pl-4 pr-2 py-2 rounded-full text-sm"
                         style={{ backgroundColor: 'var(--color-done-bg)', border: '1px solid #c5d9bf', color: 'var(--color-text)' }}
                       >
-                        <span>✓ {label}</span>
+                        <span className="flex items-center gap-1" style={{ color: 'var(--color-accent)' }}>
+                          <IconCheck size={14} /> <span style={{ color: 'var(--color-text)' }}>{label}</span>
+                        </span>
                         <button
                           onClick={() => handleUndoActividad(reg)}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs"
+                          className="w-6 h-6 rounded-full flex items-center justify-center"
                           style={{ color: 'var(--color-muted)' }}
                           aria-label="Deshacer"
                         >
-                          ✕
+                          <IconClose size={14} />
                         </button>
                       </div>
                     ))}
@@ -294,7 +297,7 @@ export default function TodayPage() {
 
               {exercises.length === 0 && sueltos.length === 0 && (
                 <div className="text-center py-16 space-y-3">
-                  <p className="text-5xl opacity-20">◫</p>
+                  <div className="flex justify-center opacity-20"><IconLibrary size={48} /></div>
                   <p style={{ color: 'var(--color-muted)' }}>
                     Tu biblioteca está vacía. Registra un entrenamiento arriba o agrega ejercicios.
                   </p>

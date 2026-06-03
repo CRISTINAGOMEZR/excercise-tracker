@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { addRutina, updateRutina } from '@/lib/firestore';
 import { uploadVideo } from '@/lib/storage';
 import { isValidVideoLink, getProvider } from '@/lib/videoUtils';
+import { IconCheck, IconPlay } from '@/components/icons';
 import { FASES, ORDEN_FASE, type Fase, type Rutina, type RutinaItem } from '@/types';
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -265,7 +266,7 @@ export default function RoutineForm({ initial }: { initial?: Rutina }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={it.miniatura} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-lg opacity-40">▶</span>
+                  <span className="opacity-40" style={{ color: 'var(--color-muted)' }}><IconPlay size={18} /></span>
                 )}
                 <span
                   className="absolute top-0.5 left-0.5 text-[9px] px-1 rounded text-white font-medium"
@@ -357,8 +358,8 @@ export default function RoutineForm({ initial }: { initial?: Rutina }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={fetchedThumb} alt="" className="w-16 h-10 object-cover rounded" />
                 )}
-                <span className="text-[11px]" style={{ color: 'var(--color-accent)' }}>
-                  ✓ {PROVIDER_LABEL[fetchedProvider] ?? 'Video'} detectado
+                <span className="text-[11px] inline-flex items-center gap-1" style={{ color: 'var(--color-accent)' }}>
+                  <IconCheck size={12} /> {PROVIDER_LABEL[fetchedProvider] ?? 'Video'} detectado
                 </span>
               </div>
             )}

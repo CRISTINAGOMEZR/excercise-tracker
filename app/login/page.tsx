@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { IconBrand } from '@/components/icons';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,10 +37,10 @@ export default function LoginPage() {
         {/* Logo / título */}
         <div className="space-y-2">
           <div
-            className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl"
+            className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center"
             style={{ backgroundColor: 'var(--color-done-bg)', color: 'var(--color-accent)' }}
           >
-            ◎
+            <IconBrand size={32} />
           </div>
           <h1
             className="text-4xl"

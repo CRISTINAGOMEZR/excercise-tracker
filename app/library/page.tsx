@@ -10,8 +10,8 @@ import {
   getEjercicios,
   getRutinas,
   getRegistrosHoy,
-  deleteRutina,
 } from '@/lib/firestore';
+import { IconLibrary } from '@/components/icons';
 import type { Exercise, Registro, Rutina } from '@/types';
 import { CATEGORIAS } from '@/types';
 
@@ -45,12 +45,6 @@ export default function LibraryPage() {
     return registros.some((r) => r.rutinaId === id);
   }
 
-  async function handleDeleteRutina(rut: Rutina) {
-    if (!confirm(`¿Borrar la rutina "${rut.titulo}"?`)) return;
-    await deleteRutina(rut.id);
-    setRutinas((prev) => prev.filter((r) => r.id !== rut.id));
-  }
-
   const categorias = ['Todas', ...CATEGORIAS.filter((c) => exercises.some((e) => e.categoria === c))];
   const filtered = filter === 'Todas' ? exercises : exercises.filter((e) => e.categoria === filter);
 
@@ -76,7 +70,7 @@ export default function LibraryPage() {
             </div>
           ) : vacio ? (
             <div className="text-center py-20 space-y-3">
-              <p className="text-5xl opacity-20">◫</p>
+              <div className="flex justify-center opacity-20"><IconLibrary size={48} /></div>
               <p style={{ color: 'var(--color-muted)' }}>No hay nada todavía.</p>
               <a href="/add" className="inline-block text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
                 Agrega lo primero
@@ -97,8 +91,6 @@ export default function LibraryPage() {
                         rutina={rut}
                         done={rutinaDone(rut.id)}
                         onOpen={() => router.push(`/library/${rut.id}`)}
-                        onEdit={() => router.push(`/add?edit=${rut.id}`)}
-                        onDelete={() => handleDeleteRutina(rut)}
                       />
                     ))}
                   </div>
@@ -139,7 +131,6 @@ export default function LibraryPage() {
                         exercise={ex}
                         done={isDone(ex.id)}
                         onOpen={() => router.push(`/library/${ex.id}`)}
-                        onEdit={() => router.push(`/add?edit=${ex.id}`)}
                       />
                     ))}
                   </div>

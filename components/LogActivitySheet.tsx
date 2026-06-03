@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { IconCheck, IconClose, IconVideo } from '@/components/icons';
 import type { ActividadGuardada, Exercise, Rutina } from '@/types';
 
 interface Props {
@@ -101,11 +102,11 @@ export default function LogActivitySheet({
             </h2>
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-lg"
+              className="w-9 h-9 rounded-full flex items-center justify-center"
               style={{ color: 'var(--color-muted)' }}
               aria-label="Cerrar"
             >
-              ✕
+              <IconClose size={20} />
             </button>
           </div>
         </div>
@@ -126,8 +127,8 @@ export default function LogActivitySheet({
                   className="px-4 py-2 rounded-full text-sm flex items-center gap-1.5"
                   style={pillStyle(done)}
                 >
-                  {done && <span style={{ color: 'var(--color-accent)' }}>✓</span>}
-                  <span>▦ {r.titulo}</span>
+                  {done && <span style={{ color: 'var(--color-accent)' }}><IconCheck size={14} /></span>}
+                  <span className="flex items-center gap-1.5"><IconVideo size={14} /> {r.titulo}</span>
                 </button>
               );
             })}
@@ -142,7 +143,7 @@ export default function LogActivitySheet({
                   className="px-4 py-2 rounded-full text-sm flex items-center gap-1.5"
                   style={pillStyle(done)}
                 >
-                  {done && <span style={{ color: 'var(--color-accent)' }}>✓</span>}
+                  {done && <span style={{ color: 'var(--color-accent)' }}><IconCheck size={14} /></span>}
                   <span>{ex.titulo}</span>
                 </button>
               );
@@ -164,11 +165,11 @@ export default function LogActivitySheet({
                 </button>
                 <button
                   onClick={() => onDeleteSaved(a)}
-                  className="pr-3 pl-1 py-2 text-xs"
+                  className="pr-3 pl-1 py-2 flex items-center"
                   style={{ color: 'var(--color-muted)' }}
                   aria-label={`Borrar ${a.nombre}`}
                 >
-                  ✕
+                  <IconClose size={14} />
                 </button>
               </div>
             ))}
@@ -193,11 +194,11 @@ export default function LogActivitySheet({
             <button
               onClick={handleFree}
               disabled={!text.trim()}
-              className="w-11 rounded-full text-white text-sm font-medium disabled:opacity-40 flex-shrink-0"
+              className="w-11 rounded-full text-white font-medium disabled:opacity-40 flex-shrink-0 flex items-center justify-center"
               style={{ backgroundColor: 'var(--color-accent)' }}
               aria-label="Agregar actividad"
             >
-              ✓
+              <IconCheck size={18} />
             </button>
           </div>
         </div>

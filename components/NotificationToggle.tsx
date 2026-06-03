@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { notificacionesSoportadas, permisoActual, activarNotificaciones } from '@/lib/messaging';
+import { IconBell, IconBellOff } from '@/components/icons';
 
 type Estado = 'cargando' | 'no-soportado' | 'activo' | 'bloqueado' | 'inactivo' | 'pidiendo';
 
@@ -49,7 +50,7 @@ export default function NotificationToggle() {
         className="rounded-2xl px-4 py-3 flex items-center gap-3 text-sm"
         style={{ backgroundColor: 'var(--color-done-bg)', border: '1px solid #c5d9bf', color: 'var(--color-text)' }}
       >
-        <span className="text-lg leading-none">🔔</span>
+        <span className="leading-none flex-shrink-0" style={{ color: 'var(--color-accent)' }}><IconBell size={20} /></span>
         <span>Recordatorios diarios activados. ¡Te avisaremos para no romper tu racha!</span>
       </div>
     );
@@ -61,7 +62,7 @@ export default function NotificationToggle() {
         className="rounded-2xl px-4 py-3 flex items-start gap-3 text-sm"
         style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-muted)' }}
       >
-        <span className="text-lg leading-none">🔕</span>
+        <span className="leading-none flex-shrink-0"><IconBellOff size={20} /></span>
         <span>
           Notificaciones bloqueadas. Actívalas desde los ajustes del navegador
           (candado junto a la dirección → Notificaciones → Permitir).
@@ -79,7 +80,7 @@ export default function NotificationToggle() {
         className="w-full py-3 rounded-2xl text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60"
         style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
       >
-        <span className="text-lg leading-none">🔔</span>
+        <span className="leading-none"><IconBell size={20} /></span>
         {estado === 'pidiendo' ? 'Activando…' : 'Activar recordatorios diarios'}
       </button>
       {error && (

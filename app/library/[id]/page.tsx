@@ -4,12 +4,15 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import GuidedSession, { type PlayItem } from '@/components/GuidedSession';
+import { IconLibrary } from '@/components/icons';
 import {
   getEjercicio,
   getRutina,
   getRegistrosHoy,
   marcarHecho,
   marcarRutinaHecha,
+  deleteEjercicio,
+  deleteRutina,
 } from '@/lib/firestore';
 import type { Exercise, Rutina } from '@/types';
 import { ORDEN_FASE } from '@/types';
@@ -60,7 +63,7 @@ export default function DetailPage() {
     return (
       <AuthGuard>
         <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-5 text-center" style={{ backgroundColor: 'var(--color-bg)' }}>
-          <p className="text-5xl opacity-20">◫</p>
+          <span className="opacity-20"><IconLibrary size={48} /></span>
           <p style={{ color: 'var(--color-muted)' }}>No se encontró este contenido.</p>
           <a href="/library" className="inline-block text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
             Volver a la biblioteca
@@ -87,6 +90,12 @@ export default function DetailPage() {
           done={done}
           onComplete={() => { marcarHecho(ex.id).catch(() => {}); }}
           onBack={() => router.back()}
+          onEdit={() => router.push(`/add?edit=${ex.id}`)}
+          onDelete={async () => {
+            if (!confirm(`¿Borrar el ejercicio "${ex.titulo}"?`)) return;
+            await deleteEjercicio(ex.id);
+            router.push('/library');
+          }}
         />
       </AuthGuard>
     );
@@ -117,6 +126,12 @@ export default function DetailPage() {
         done={done}
         onComplete={() => { marcarRutinaHecha(rut.id).catch(() => {}); }}
         onBack={() => router.back()}
+        onEdit={() => router.push(`/add?edit=${rut.id}`)}
+        onDelete={async () => {
+          if (!confirm(`¿Borrar la rutina "${rut.titulo}"?`)) return;
+          await deleteRutina(rut.id);
+          router.push('/library');
+        }}
       />
     </AuthGuard>
   );
