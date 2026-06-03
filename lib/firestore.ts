@@ -72,6 +72,13 @@ export async function getEjercicio(id: string): Promise<Exercise | null> {
   } as Exercise;
 }
 
+export async function updateEjercicio(
+  id: string,
+  data: Partial<Omit<Exercise, 'id' | 'createdAt'>>
+): Promise<void> {
+  await updateDoc(doc(db, 'ejercicios', id), data);
+}
+
 export async function deleteEjercicio(id: string): Promise<void> {
   await deleteDoc(doc(db, 'ejercicios', id));
 }

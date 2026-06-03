@@ -49,6 +49,7 @@ export default function GuidedSession({
   const [count, setCount] = useState(3);
   const [muted, setMuted] = useState(true);
   const [landscape, setLandscape] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
 
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -100,8 +101,9 @@ export default function GuidedSession({
   }
   function next() {
     if (isLast) { clearTimer(); setPhase('finished'); return; }
+    clearTimer();
     setIndex((i) => i + 1);
-    runCountdown();
+    setPhase('playing'); // sin countdown: solo el primer video lo tiene
   }
   function prev() {
     if (isFirst) return;
@@ -111,11 +113,13 @@ export default function GuidedSession({
   }
   function exitToIntro() {
     clearTimer();
+    setConfirmExit(false);
     setPhase('intro');
     setIndex(0);
   }
   function complete() {
     clearTimer();
+    setConfirmExit(false);
     onComplete();
     onBack();
   }
@@ -220,17 +224,24 @@ export default function GuidedSession({
   const embedUrl = item && item.tipo === 'link' ? getGuidedEmbedUrl(item.url, muted) : null;
   const vertical = item && item.tipo === 'link' && isVerticalEmbed(item.url);
 
+  // En horizontal (teléfono girado) el video ocupa casi toda la pantalla;
+  // en vertical es lo más grande posible sin tapar los controles.
   const videoStyle: React.CSSProperties = landscape
-    ? { height: '88vh', width: 'auto', aspectRatio: vertical ? '9/16' : '16/9', maxWidth: '100%' }
+    ? vertical
+      ? { height: '100vh', width: 'auto', aspectRatio: '9/16', maxWidth: '100vw' }
+      : { width: '100vw', height: 'auto', aspectRatio: '16/9', maxHeight: '100vh' }
     : vertical
-      ? { height: '64vh', width: 'auto', aspectRatio: '9/16', maxWidth: '100%' }
-      : { width: '100%', aspectRatio: '16/9', maxHeight: '64vh' };
+      ? { height: '74vh', width: 'auto', aspectRatio: '9/16', maxWidth: '100%' }
+      : { width: '100%', aspectRatio: '16/9' };
 
   return (
     <div ref={overlayRef} className="fixed inset-0 z-[60] flex flex-col" style={{ backgroundColor: 'rgba(15,15,15,0.98)' }}>
       {/* Header */}
-      <div className="flex items-start justify-between px-4 pt-4 pb-2 gap-2">
-        <div className="min-w-0">
+      <div
+        className={`flex items-start justify-between gap-2 px-4 pt-4 pb-2 ${landscape ? 'absolute top-0 left-0 right-0 z-10' : ''}`}
+        style={landscape ? { background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)' } : undefined}
+      >
+        <div className={`min-w-0 ${landscape ? 'opacity-0 pointer-events-none' : ''}`}>
           <p className="text-[11px] uppercase tracking-widest truncate" style={{ color: 'rgba(255,255,255,0.5)' }}>
             {titulo}
           </p>
@@ -263,10 +274,10 @@ export default function GuidedSession({
             ⛶
           </button>
           <button
-            onClick={exitToIntro}
+            onClick={() => setConfirmExit(true)}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xl"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-            aria-label="Cerrar"
+            aria-label="Salir"
           >
             ✕
           </button>
@@ -274,7 +285,7 @@ export default function GuidedSession({
       </div>
 
       {/* Progreso (puntos) para rutinas */}
-      {multi && phase !== 'finished' && (
+      {multi && phase !== 'finished' && !landscape && (
         <div className="flex justify-center gap-1.5 px-4 pb-1">
           {items.map((it, i) => (
             <span
@@ -290,7 +301,7 @@ export default function GuidedSession({
       )}
 
       {/* Cuerpo */}
-      <div className="flex-1 flex flex-col items-center justify-center px-3 min-h-0">
+      <div className={`flex-1 flex flex-col items-center justify-center min-h-0 ${landscape ? 'px-0' : 'px-3'}`}>
         {phase === 'countdown' ? (
           <div className="text-center">
             <p className="text-sm mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
@@ -348,7 +359,10 @@ export default function GuidedSession({
       </div>
 
       {/* Footer / controles */}
-      <div className="px-4 pb-8 pt-2 space-y-3">
+      <div
+        className={`px-4 pt-2 space-y-3 ${landscape ? 'absolute bottom-0 left-0 right-0 z-10 pb-4' : 'pb-8'}`}
+        style={landscape ? { background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)' } : undefined}
+      >
         {phase === 'finished' ? (
           <button
             onClick={complete}
@@ -389,6 +403,49 @@ export default function GuidedSession({
           </div>
         ) : null}
       </div>
+
+      {/* Hoja de confirmación al salir con el entrenamiento en curso */}
+      {confirmExit && (
+        <div className="absolute inset-0 z-[70] flex flex-col justify-end">
+          <button
+            onClick={() => setConfirmExit(false)}
+            className="absolute inset-0"
+            style={{ backgroundColor: 'rgba(15,15,15,0.6)' }}
+            aria-label="Cerrar"
+          />
+          <div
+            className="relative rounded-t-3xl"
+            style={{ backgroundColor: 'var(--color-bg)', boxShadow: '0 -8px 30px rgba(0,0,0,0.3)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+          >
+            <div className="pt-3 px-5">
+              <div className="mx-auto h-1 w-10 rounded-full" style={{ backgroundColor: 'var(--color-border)' }} />
+            </div>
+            <div className="px-5 pt-4 pb-6 space-y-2">
+              <button
+                onClick={() => setConfirmExit(false)}
+                className="w-full py-4 rounded-2xl text-sm font-medium"
+                style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+              >
+                ▶ Volver al entrenamiento
+              </button>
+              <button
+                onClick={complete}
+                className="w-full py-4 rounded-2xl text-white text-sm font-medium"
+                style={{ backgroundColor: 'var(--color-accent)' }}
+              >
+                ✓ Marcar como completado
+              </button>
+              <button
+                onClick={exitToIntro}
+                className="w-full py-3 rounded-2xl text-sm font-medium"
+                style={{ color: 'var(--color-muted)' }}
+              >
+                Salir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

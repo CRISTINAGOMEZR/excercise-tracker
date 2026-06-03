@@ -10,9 +10,6 @@ import {
   getEjercicios,
   getRutinas,
   getRegistrosHoy,
-  marcarHecho,
-  desmarcarHecho,
-  marcarRutinaHecha,
   deleteRutina,
 } from '@/lib/firestore';
 import type { Exercise, Registro, Rutina } from '@/types';
@@ -46,34 +43,6 @@ export default function LibraryPage() {
   }
   function rutinaDone(id: string) {
     return registros.some((r) => r.rutinaId === id);
-  }
-
-  async function handleToggle(ex: Exercise) {
-    const reg = registros.find((r) => r.ejercicioId === ex.id);
-    if (reg) {
-      await desmarcarHecho(reg.id);
-      setRegistros((prev) => prev.filter((r) => r.id !== reg.id));
-    } else {
-      const id = await marcarHecho(ex.id);
-      setRegistros((prev) => [
-        ...prev,
-        { id, ejercicioId: ex.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
-      ]);
-    }
-  }
-
-  async function handleToggleRutina(rut: Rutina) {
-    const reg = registros.find((r) => r.rutinaId === rut.id);
-    if (reg) {
-      await desmarcarHecho(reg.id);
-      setRegistros((prev) => prev.filter((r) => r.id !== reg.id));
-    } else {
-      const id = await marcarRutinaHecha(rut.id);
-      setRegistros((prev) => [
-        ...prev,
-        { id, rutinaId: rut.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
-      ]);
-    }
   }
 
   async function handleDeleteRutina(rut: Rutina) {
@@ -127,8 +96,7 @@ export default function LibraryPage() {
                         key={rut.id}
                         rutina={rut}
                         done={rutinaDone(rut.id)}
-                        onPlay={() => router.push(`/library/${rut.id}`)}
-                        onToggle={() => handleToggleRutina(rut)}
+                        onOpen={() => router.push(`/library/${rut.id}`)}
                         onEdit={() => router.push(`/add?edit=${rut.id}`)}
                         onDelete={() => handleDeleteRutina(rut)}
                       />
@@ -170,8 +138,8 @@ export default function LibraryPage() {
                         key={ex.id}
                         exercise={ex}
                         done={isDone(ex.id)}
-                        onToggle={() => handleToggle(ex)}
-                        onPlay={() => router.push(`/library/${ex.id}`)}
+                        onOpen={() => router.push(`/library/${ex.id}`)}
+                        onEdit={() => router.push(`/add?edit=${ex.id}`)}
                       />
                     ))}
                   </div>

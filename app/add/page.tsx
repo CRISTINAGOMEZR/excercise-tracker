@@ -6,8 +6,8 @@ import AuthGuard from '@/components/AuthGuard';
 import Nav from '@/components/Nav';
 import AddExerciseForm from '@/components/AddExerciseForm';
 import RoutineForm from '@/components/RoutineForm';
-import { getRutina } from '@/lib/firestore';
-import type { Rutina } from '@/types';
+import { getRutina, getEjercicio } from '@/lib/firestore';
+import type { Rutina, Exercise } from '@/types';
 
 type Mode = 'ejercicio' | 'rutina';
 
@@ -16,16 +16,24 @@ function AddContent() {
   const params = useSearchParams();
   const editId = params.get('edit');
 
-  const [mode, setMode] = useState<Mode>(editId ? 'rutina' : 'ejercicio');
+  const [mode, setMode] = useState<Mode>('ejercicio');
   const [editRutina, setEditRutina] = useState<Rutina | null>(null);
+  const [editEjercicio, setEditEjercicio] = useState<Exercise | null>(null);
   const [loadingEdit, setLoadingEdit] = useState(!!editId);
 
   useEffect(() => {
     if (!editId) return;
     (async () => {
-      const r = await getRutina(editId);
-      setEditRutina(r);
-      setMode('rutina');
+      // Puede ser un ejercicio o una rutina: probamos ejercicio primero.
+      const ex = await getEjercicio(editId);
+      if (ex) {
+        setEditEjercicio(ex);
+        setMode('ejercicio');
+      } else {
+        const r = await getRutina(editId);
+        setEditRutina(r);
+        setMode('rutina');
+      }
       setLoadingEdit(false);
     })();
   }, [editId]);
@@ -42,7 +50,9 @@ function AddContent() {
           ←
         </button>
         <h1 className="text-4xl" style={{ fontFamily: 'var(--font-cormorant)', color: 'var(--color-text)' }}>
-          {editId ? 'Editar rutina' : mode === 'rutina' ? 'Nueva rutina' : 'Nuevo ejercicio'}
+          {editId
+            ? (mode === 'rutina' ? 'Editar rutina' : 'Editar ejercicio')
+            : mode === 'rutina' ? 'Nueva rutina' : 'Nuevo ejercicio'}
         </h1>
       </header>
 
@@ -70,12 +80,12 @@ function AddContent() {
           </div>
         )}
 
-        {mode === 'ejercicio' ? (
-          <AddExerciseForm />
-        ) : loadingEdit ? (
+        {loadingEdit ? (
           <div className="flex justify-center py-20">
             <div className="w-6 h-6 rounded-full border-2 border-current border-t-transparent animate-spin opacity-30" />
           </div>
+        ) : mode === 'ejercicio' ? (
+          <AddExerciseForm initial={editEjercicio ?? undefined} />
         ) : (
           <RoutineForm initial={editRutina ?? undefined} />
         )}

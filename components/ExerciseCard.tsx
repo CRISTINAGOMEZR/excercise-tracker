@@ -6,32 +6,37 @@ import type { Exercise } from '@/types';
 interface Props {
   exercise: Exercise;
   done: boolean;
-  onToggle: () => void;
-  onPlay: () => void;
+  /** Click en cualquier parte de la card (abrir detalle o reproducir). */
+  onOpen?: () => void;
+  onPlay?: () => void;
+  /** Lápiz de edición arriba a la izquierda (solo si se provee). */
+  onEdit?: () => void;
+  /** Botón redondo de marcar/desmarcar (solo si se provee). */
+  onToggle?: () => void;
 }
 
-export default function ExerciseCard({ exercise, done, onToggle, onPlay }: Props) {
+export default function ExerciseCard({ exercise, done, onOpen, onPlay, onEdit, onToggle }: Props) {
   const thumbnail =
     exercise.miniatura ||
     (exercise.tipo === 'link' && getYouTubeId(exercise.url)
       ? youtubeThumbnail(getYouTubeId(exercise.url)!)
       : null);
 
+  const handleCardClick = onOpen ?? onPlay;
+
   return (
     <div
-      className="rounded-2xl overflow-hidden transition-all duration-200"
+      onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      className="rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer text-left"
       style={{
         backgroundColor: done ? 'var(--color-done-bg)' : 'var(--color-bg-card)',
         border: `1px solid ${done ? '#c5d9bf' : 'var(--color-border)'}`,
       }}
     >
       {/* Thumbnail */}
-      <button
-        onClick={onPlay}
-        className="relative w-full block"
-        style={{ aspectRatio: '16/9' }}
-        aria-label={`Reproducir ${exercise.titulo}`}
-      >
+      <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
         {thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -46,6 +51,18 @@ export default function ExerciseCard({ exercise, done, onToggle, onPlay }: Props
           >
             ▶
           </div>
+        )}
+
+        {/* Editar (lápiz) arriba a la izquierda */}
+        {onEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center text-sm shadow"
+            style={{ backgroundColor: 'rgba(255,255,255,0.92)', color: 'var(--color-text)' }}
+            aria-label={`Editar ${exercise.titulo}`}
+          >
+            ✏️
+          </button>
         )}
 
         {/* Play overlay */}
@@ -64,9 +81,9 @@ export default function ExerciseCard({ exercise, done, onToggle, onPlay }: Props
             ✓
           </div>
         )}
-      </button>
+      </div>
 
-      {/* Info + toggle */}
+      {/* Info */}
       <div className="px-4 py-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3
@@ -78,22 +95,25 @@ export default function ExerciseCard({ exercise, done, onToggle, onPlay }: Props
           <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>
             {exercise.categoria}
             {exercise.duracionMin ? ` · ${exercise.duracionMin} min` : ''}
+            {done && !onToggle ? ' · ✓ hecho hoy' : ''}
           </p>
         </div>
 
-        {/* Toggle hecho */}
-        <button
-          onClick={onToggle}
-          className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 border"
-          style={{
-            backgroundColor: done ? 'var(--color-accent)' : 'transparent',
-            borderColor: done ? 'var(--color-accent)' : 'var(--color-border)',
-            color: done ? 'white' : 'var(--color-muted)',
-          }}
-          aria-label={done ? 'Desmarcar' : 'Marcar como hecho'}
-        >
-          {done ? '✓' : '○'}
-        </button>
+        {/* Toggle hecho (solo si se provee) */}
+        {onToggle && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+            className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 border"
+            style={{
+              backgroundColor: done ? 'var(--color-accent)' : 'transparent',
+              borderColor: done ? 'var(--color-accent)' : 'var(--color-border)',
+              color: done ? 'white' : 'var(--color-muted)',
+            }}
+            aria-label={done ? 'Desmarcar' : 'Marcar como hecho'}
+          >
+            {done ? '✓' : '○'}
+          </button>
+        )}
       </div>
     </div>
   );

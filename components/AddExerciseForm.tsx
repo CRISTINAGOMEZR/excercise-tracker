@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { addEjercicio } from '@/lib/firestore';
+import { addEjercicio, updateEjercicio } from '@/lib/firestore';
 import { uploadVideo } from '@/lib/storage';
 import { isValidVideoLink, getProvider } from '@/lib/videoUtils';
-import { CATEGORIAS, type Categoria } from '@/types';
+import { CATEGORIAS, type Categoria, type Exercise } from '@/types';
 
 const PROVIDER_LABEL: Record<string, string> = {
   youtube: 'YouTube',
@@ -15,14 +15,15 @@ const PROVIDER_LABEL: Record<string, string> = {
 
 type Tab = 'link' | 'upload';
 
-export default function AddExerciseForm() {
+export default function AddExerciseForm({ initial }: { initial?: Exercise }) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>('link');
-  const [titulo, setTitulo] = useState('');
-  const [categoria, setCategoria] = useState<Categoria>(CATEGORIAS[0]);
-  const [duracionMin, setDuracionMin] = useState('');
-  const [notas, setNotas] = useState('');
-  const [url, setUrl] = useState('');
+  const editing = !!initial;
+  const [tab, setTab] = useState<Tab>(initial?.tipo ?? 'link');
+  const [titulo, setTitulo] = useState(initial?.titulo ?? '');
+  const [categoria, setCategoria] = useState<Categoria>((initial?.categoria as Categoria) ?? CATEGORIAS[0]);
+  const [duracionMin, setDuracionMin] = useState(initial?.duracionMin ? String(initial.duracionMin) : '');
+  const [notas, setNotas] = useState(initial?.notas ?? '');
+  const [url, setUrl] = useState(initial?.url ?? '');
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -31,9 +32,9 @@ export default function AddExerciseForm() {
 
   // Importación automática (preview)
   const [importing, setImporting] = useState(false);
-  const [fetchedThumb, setFetchedThumb] = useState<string | null>(null);
+  const [fetchedThumb, setFetchedThumb] = useState<string | null>(initial?.miniatura ?? null);
   const [fetchedProvider, setFetchedProvider] = useState<string | null>(null);
-  const [titleTouched, setTitleTouched] = useState(false);
+  const [titleTouched, setTitleTouched] = useState(editing);
 
   // Cuando se pega un enlace válido, trae título + miniatura automáticamente.
   useEffect(() => {
@@ -80,7 +81,8 @@ export default function AddExerciseForm() {
         return;
       }
     } else {
-      if (!file) { setError('Selecciona un archivo de video.'); return; }
+      // Al editar un video subido se permite conservar el archivo existente.
+      if (!file && !editing) { setError('Selecciona un archivo de video.'); return; }
     }
 
     setLoading(true);
@@ -97,7 +99,7 @@ export default function AddExerciseForm() {
         if (fetchedThumb) miniatura = fetchedThumb;
       }
 
-      await addEjercicio({
+      const payload = {
         titulo:      titulo.trim(),
         tipo:        tab,
         url:         videoUrl,
@@ -105,10 +107,16 @@ export default function AddExerciseForm() {
         categoria,
         duracionMin: duracionMin ? Number(duracionMin) : undefined,
         notas:       notas.trim() || undefined,
-      });
+      };
+
+      if (editing && initial) {
+        await updateEjercicio(initial.id, payload);
+      } else {
+        await addEjercicio(payload);
+      }
 
       setSuccess(true);
-      setTimeout(() => router.push('/library'), 1500);
+      setTimeout(() => router.push('/library'), 1200);
     } catch (err) {
       const code = (err as { code?: string })?.code;
       const msg = (err as { message?: string })?.message ?? String(err);
@@ -247,6 +255,11 @@ export default function AddExerciseForm() {
               {(file.size / 1024 / 1024).toFixed(1)} MB
             </p>
           )}
+          {editing && !file && (
+            <p className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>
+              Se conservará el video actual si no eliges otro.
+            </p>
+          )}
           {loading && progress > 0 && (
             <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-border)' }}>
               <div
@@ -317,7 +330,7 @@ export default function AddExerciseForm() {
       {/* Éxito */}
       {success && (
         <p className="text-sm px-1" style={{ color: 'var(--color-accent)' }}>
-          ✓ ¡Ejercicio guardado! Redirigiendo a tu biblioteca…
+          ✓ ¡Ejercicio {editing ? 'actualizado' : 'guardado'}! Redirigiendo a tu biblioteca…
         </p>
       )}
 
@@ -332,7 +345,7 @@ export default function AddExerciseForm() {
           ? '✓ ¡Guardado!'
           : loading
             ? (tab === 'upload' && progress > 0 ? `Subiendo ${progress}%…` : 'Guardando…')
-            : 'Guardar ejercicio'}
+            : editing ? 'Guardar cambios' : 'Guardar ejercicio'}
       </button>
     </form>
   );
