@@ -1,7 +1,36 @@
 # Exercise Tracker — Claude Code Instructions
 
-> Las reglas globales (política de autonomía 🟢/🟡/🔴, flujo de git, agentes) están en
-> `~/.claude/CLAUDE.md`. Este archivo solo cubre lo específico de este proyecto.
+> En local, las reglas globales están en `~/.claude/CLAUDE.md`. En las corridas de
+> GitHub Actions ese archivo **no existe**, así que la política de autonomía está
+> repetida abajo a propósito. Si cambias una, cambia la otra.
+
+## Política de autonomía
+
+**🟢 Verde — hazlo y mergéalo solo.** Typos, dependencias patch/minor, parches de
+seguridad, código muerto, lint, tests nuevos, accesibilidad que no cambia el layout
+(`aria-label`, `alt`, contraste hasta WCAG AA), bugs evidentes con fix de pocas líneas.
+Todas estas condiciones deben cumplirse: `npm run build` pasa, CI en verde, no toca
+auth ni reglas de Firestore ni esquema de datos, diff < 150 líneas, sin dependencias
+nuevas. Si falla una sola → pasa a 🟡.
+
+**🟡 Amarillo — abre PR y espera aprobación.** Cualquier cambio visible de UI, features,
+refactors, deps major, cambios de esquema, dependencias nuevas, o > 150 líneas.
+Haz el trabajo completo y deja el PR listo. **No lo mergees.**
+
+**🔴 Rojo — pregunta antes de empezar.** Borrar datos, migraciones destructivas, reglas
+de Firestore, variables de entorno y secretos, push directo a `main`, cualquier cosa que
+cueste dinero, publicar hacia fuera, reescrituras grandes.
+
+Ante la duda entre dos niveles, elige el más restrictivo.
+
+**Git:** nunca commitees a `main`. Rama `claude/<tipo>-<descripción>` (tipos: `fix`,
+`feat`, `chore`, `a11y`, `deps`, `test`). `npm run build` siempre antes de commitear.
+
+**Agentes:** en `.claude/agents/` — `pm` (prioriza y cuestiona a los demás),
+`bug-hunter`, `ui-reviewer`, `deps-security`, `test-quality`. Todo pasa por `pm`
+antes de llegar a Cristina.
+
+---
 
 ## Qué es
 
