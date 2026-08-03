@@ -15,12 +15,13 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { ymd } from './stats';
 import type { ActividadGuardada, Exercise, Registro, Rutina, RutinaItem } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  return ymd(new Date());
 }
 
 // ─── Ejercicios ───────────────────────────────────────────────────────────────
@@ -300,11 +301,13 @@ export async function getRachaActual(): Promise<number> {
 
   let racha = 0;
   const hoy = new Date();
+  // Ancla al mediodía local: evita que restar días cruce un cambio de horario
+  // (DST) y desalinee la fecha resultante.
+  const hoyMediodia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 12);
   for (let i = 0; i < fechas.length; i++) {
-    const esperada = new Date(hoy);
-    esperada.setDate(hoy.getDate() - i);
-    const esperadaStr = esperada.toISOString().split('T')[0];
-    if (fechas[i] === esperadaStr) racha++;
+    const esperada = new Date(hoyMediodia);
+    esperada.setDate(hoyMediodia.getDate() - i);
+    if (fechas[i] === ymd(esperada)) racha++;
     else break;
   }
   return racha;
@@ -312,9 +315,10 @@ export async function getRachaActual(): Promise<number> {
 
 /** Total de ejercicios completados en los últimos 7 días */
 export async function getTotalSemana(): Promise<number> {
-  const hace7 = new Date();
+  const hoy = new Date();
+  const hace7 = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 12);
   hace7.setDate(hace7.getDate() - 6);
-  const desde = hace7.toISOString().split('T')[0];
+  const desde = ymd(hace7);
   const snap = await getDocs(
     query(collection(db, 'registros'), where('fecha', '>=', desde))
   );
