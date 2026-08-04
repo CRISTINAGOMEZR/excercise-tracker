@@ -15,13 +15,8 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { ymd } from './stats';
 import type { ActividadGuardada, Exercise, Registro, Rutina, RutinaItem } from '@/types';
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
-}
 
 // ─── Ejercicios ───────────────────────────────────────────────────────────────
 
@@ -89,7 +84,7 @@ export async function registrarActividad(nombre?: string): Promise<string> {
   const limpio = nombre?.trim();
   const ref = await addDoc(collection(db, 'registros'), {
     actividad:    limpio || 'Entrenamiento',
-    fecha:        todayStr(),
+    fecha:        ymd(),
     completadoAt: serverTimestamp(),
   });
   if (limpio) {
@@ -147,7 +142,7 @@ export async function eliminarActividadGuardada(id: string): Promise<void> {
 // ─── Registros ────────────────────────────────────────────────────────────────
 
 export async function getRegistrosHoy(): Promise<Registro[]> {
-  const fecha = todayStr();
+  const fecha = ymd();
   const snap = await getDocs(
     query(collection(db, 'registros'), where('fecha', '==', fecha))
   );
@@ -201,7 +196,7 @@ export async function getRegistrosByFecha(fecha: string): Promise<Registro[]> {
 export async function marcarHecho(ejercicioId: string): Promise<string> {
   const ref = await addDoc(collection(db, 'registros'), {
     ejercicioId,
-    fecha:        todayStr(),
+    fecha:        ymd(),
     completadoAt: serverTimestamp(),
   });
   return ref.id;
@@ -263,7 +258,7 @@ export async function deleteRutina(id: string): Promise<void> {
 export async function marcarRutinaHecha(rutinaId: string): Promise<string> {
   const ref = await addDoc(collection(db, 'registros'), {
     rutinaId,
-    fecha:        todayStr(),
+    fecha:        ymd(),
     completadoAt: serverTimestamp(),
   });
   return ref.id;
@@ -298,13 +293,22 @@ export async function getRachaActual(): Promise<number> {
   const fechas = [...new Set(snap.docs.map((d) => d.data().fecha as string))];
   if (fechas.length === 0) return 0;
 
-  let racha = 0;
   const hoy = new Date();
+  const ayer = new Date(hoy);
+  ayer.setDate(hoy.getDate() - 1);
+
+  // La racha sigue viva si el registro más reciente es de hoy o de ayer
+  // (todavía no ha entrenado hoy pero la racha no se rompió).
+  let cursor: Date;
+  if (fechas[0] === ymd(hoy)) cursor = hoy;
+  else if (fechas[0] === ymd(ayer)) cursor = ayer;
+  else return 0;
+
+  let racha = 0;
   for (let i = 0; i < fechas.length; i++) {
-    const esperada = new Date(hoy);
-    esperada.setDate(hoy.getDate() - i);
-    const esperadaStr = esperada.toISOString().split('T')[0];
-    if (fechas[i] === esperadaStr) racha++;
+    const esperada = new Date(cursor);
+    esperada.setDate(cursor.getDate() - i);
+    if (fechas[i] === ymd(esperada)) racha++;
     else break;
   }
   return racha;
@@ -314,7 +318,7 @@ export async function getRachaActual(): Promise<number> {
 export async function getTotalSemana(): Promise<number> {
   const hace7 = new Date();
   hace7.setDate(hace7.getDate() - 6);
-  const desde = hace7.toISOString().split('T')[0];
+  const desde = ymd(hace7);
   const snap = await getDocs(
     query(collection(db, 'registros'), where('fecha', '>=', desde))
   );
