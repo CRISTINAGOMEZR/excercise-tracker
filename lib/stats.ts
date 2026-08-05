@@ -1,8 +1,9 @@
 import type { Exercise, Registro } from '@/types';
 
-/** Fecha en formato YYYY-MM-DD (UTC, igual que se guardan los registros). */
+/** Fecha local en formato YYYY-MM-DD (igual que se guardan los registros). */
 export function ymd(d: Date): string {
-  return d.toISOString().split('T')[0];
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
 /** Conteo de registros por fecha. */

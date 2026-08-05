@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
+import { ymd } from '@/lib/stats';
 import Nav from '@/components/Nav';
 import ExerciseCard from '@/components/ExerciseCard';
 import VideoPlayer from '@/components/VideoPlayer';
@@ -87,7 +88,7 @@ export default function TodayPage() {
       const id = await marcarHecho(ex.id);
       setRegistros((prev) => [
         ...prev,
-        { id, ejercicioId: ex.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
+        { id, ejercicioId: ex.id, fecha: ymd(new Date()), completadoAt: new Date() },
       ]);
     }
     refreshStats();
@@ -103,7 +104,7 @@ export default function TodayPage() {
       const id = await marcarRutinaHecha(rut.id);
       setRegistros((prev) => [
         ...prev,
-        { id, rutinaId: rut.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
+        { id, rutinaId: rut.id, fecha: ymd(new Date()), completadoAt: new Date() },
       ]);
     }
     refreshStats();
@@ -116,7 +117,7 @@ export default function TodayPage() {
     const id = await registrarActividad(nombre);
     setRegistros((prev) => [
       ...prev,
-      { id, actividad: nombre, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
+      { id, actividad: nombre, fecha: ymd(new Date()), completadoAt: new Date() },
     ]);
     // Refresca las pills (puede haber una nueva o subir de uso).
     getActividadesGuardadas().then(setSaved);
