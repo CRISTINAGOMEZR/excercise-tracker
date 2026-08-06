@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import Nav from '@/components/Nav';
 import ExerciseCard from '@/components/ExerciseCard';
@@ -38,6 +38,10 @@ export default function TodayPage() {
 
   // Hoja de registro
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Marcados en vuelo: evita que un doble toque cree dos registros del mismo
+  // ejercicio/rutina (el estado local no se actualiza hasta que vuelve Firestore).
+  const enCurso = useRef<Set<string>>(new Set());
 
   const today = new Date().toLocaleDateString('es-MX', {
     weekday: 'long', day: 'numeric', month: 'long',
@@ -78,33 +82,47 @@ export default function TodayPage() {
   }
 
   async function handleToggle(ex: Exercise) {
-    const reg = registros.find((r) => r.ejercicioId === ex.id);
-    if (reg) {
-      setRegistros((prev) => prev.filter((r) => r.id !== reg.id));
-      await desmarcarHecho(reg.id);
-    } else {
-      setCelebrate((n) => n + 1);
-      const id = await marcarHecho(ex.id);
-      setRegistros((prev) => [
-        ...prev,
-        { id, ejercicioId: ex.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
-      ]);
+    const clave = `ex-${ex.id}`;
+    if (enCurso.current.has(clave)) return;
+    enCurso.current.add(clave);
+    try {
+      const reg = registros.find((r) => r.ejercicioId === ex.id);
+      if (reg) {
+        setRegistros((prev) => prev.filter((r) => r.id !== reg.id));
+        await desmarcarHecho(reg.id);
+      } else {
+        setCelebrate((n) => n + 1);
+        const id = await marcarHecho(ex.id);
+        setRegistros((prev) => [
+          ...prev,
+          { id, ejercicioId: ex.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
+        ]);
+      }
+    } finally {
+      enCurso.current.delete(clave);
     }
     refreshStats();
   }
 
   async function handleToggleRutina(rut: Rutina) {
-    const reg = registros.find((r) => r.rutinaId === rut.id);
-    if (reg) {
-      setRegistros((prev) => prev.filter((r) => r.id !== reg.id));
-      await desmarcarHecho(reg.id);
-    } else {
-      setCelebrate((n) => n + 1);
-      const id = await marcarRutinaHecha(rut.id);
-      setRegistros((prev) => [
-        ...prev,
-        { id, rutinaId: rut.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
-      ]);
+    const clave = `rut-${rut.id}`;
+    if (enCurso.current.has(clave)) return;
+    enCurso.current.add(clave);
+    try {
+      const reg = registros.find((r) => r.rutinaId === rut.id);
+      if (reg) {
+        setRegistros((prev) => prev.filter((r) => r.id !== reg.id));
+        await desmarcarHecho(reg.id);
+      } else {
+        setCelebrate((n) => n + 1);
+        const id = await marcarRutinaHecha(rut.id);
+        setRegistros((prev) => [
+          ...prev,
+          { id, rutinaId: rut.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
+        ]);
+      }
+    } finally {
+      enCurso.current.delete(clave);
     }
     refreshStats();
   }

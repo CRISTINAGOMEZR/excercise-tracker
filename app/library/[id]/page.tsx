@@ -88,7 +88,13 @@ export default function DetailPage() {
           notas={ex.notas}
           items={items}
           done={done}
-          onComplete={() => { marcarHecho(ex.id).catch(() => {}); }}
+          onComplete={() => {
+            // Si ya estaba marcado hoy no crees un segundo registro: duplicaría
+            // "hecho hoy", la semana, el mes y el heatmap.
+            if (done) return;
+            setDone(true);
+            marcarHecho(ex.id).catch(() => {});
+          }}
           onBack={() => router.back()}
           onEdit={() => router.push(`/add?edit=${ex.id}`)}
           onDelete={async () => {
@@ -124,7 +130,12 @@ export default function DetailPage() {
         duracionMin={duracionMin}
         items={items}
         done={done}
-        onComplete={() => { marcarRutinaHecha(rut.id).catch(() => {}); }}
+        onComplete={() => {
+          // Igual que con los ejercicios: no dupliques el registro del día.
+          if (done) return;
+          setDone(true);
+          marcarRutinaHecha(rut.id).catch(() => {});
+        }}
         onBack={() => router.back()}
         onEdit={() => router.push(`/add?edit=${rut.id}`)}
         onDelete={async () => {
