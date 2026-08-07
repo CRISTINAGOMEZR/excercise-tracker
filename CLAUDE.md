@@ -155,10 +155,6 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 
 ## Backlog
 
-### P0
-- [ ] No hay CI. Sin build en verde automático, el auto-merge 🟢 no tiene red de seguridad.
-      → añadir `.github/workflows/check.yml` con `npm run build`
-
 ### P1
 - [ ] Tests para `lib/stats.ts` — sobre todo `rachaMasLarga` y el manejo de fechas en cambio de día
 
@@ -168,6 +164,7 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 - [ ] Auditoría de accesibilidad WCAG AA (contraste de `--color-muted` sobre `sand-50` está justo)
 
 ### Hecho ✅
+- [x] CI: `.github/workflows/check.yml` corre `npm run build` en cada push/PR
 - [x] `min-height/min-width: 44px` acotado a `button`, `[role=button]` y `nav a` — ya no deforma
       los links de texto. Los links de estado vacío usan `min-h-touch` para conservar el tap target
 - [x] Editar/borrar movidos al detalle + migración de iconos a Carbon (`5155e2d`)
