@@ -65,7 +65,7 @@ export default function DetailPage() {
         <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-5 text-center" style={{ backgroundColor: 'var(--color-bg)' }}>
           <span className="opacity-20"><IconLibrary size={48} /></span>
           <p style={{ color: 'var(--color-muted)' }}>No se encontró este contenido.</p>
-          <a href="/library" className="inline-block text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
+          <a href="/library" className="inline-flex items-center min-h-touch text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
             Volver a la biblioteca
           </a>
         </div>

@@ -64,10 +64,11 @@ Paleta en `tailwind.config.ts` y como CSS vars en `app/globals.css`:
 | `terracotta-500` | `#b56f54` | Acento cálido secundario |
 
 Tipografía: **Cormorant** (serif) para h1/h2/h3 · **DM Sans** para el resto.
-Tap targets mínimo 44px — forzado globalmente en `globals.css` sobre `button`, `a`, `[role=button]`.
+Tap targets mínimo 44px — forzado en `globals.css` sobre `button`, `[role=button]` y `nav a`.
 
-⚠️ Ese `min-height/min-width: 44px` global sobre **todos** los `<a>` es agresivo: afecta también a
-links dentro de párrafos. Si algo se ve con espaciado raro en texto corrido, es esto.
+Los `<a>` sueltos **no** llevan los 44px automáticos (deformaban los links dentro de texto). Si un
+link es una acción y necesita tap target, añádele `min-h-touch` (token `touch: 44px` en
+`tailwind.config.ts`) junto con `inline-flex items-center` para que el texto quede centrado.
 
 ## Mapa de archivos
 
@@ -152,12 +153,6 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 - Editar y borrar viven en el **detalle** (`library/[id]`), no en las cards. Fue una decisión
   explícita (commit `5155e2d`) — no las devuelvas a las cards.
 
-## Estado actual
-
-**Sin commitear ahora mismo:** `app/globals.css` añade la fuente **Fredoka** al import de Google
-Fonts, pero no está declarada en `tailwind.config.ts` ni usada en ningún componente. O es trabajo
-a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarlo.
-
 ## Backlog
 
 ### P0
@@ -166,8 +161,6 @@ a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarl
 
 ### P1
 - [ ] Tests para `lib/stats.ts` — sobre todo `rachaMasLarga` y el manejo de fechas en cambio de día
-- [ ] Revisar el `min-height: 44px` global sobre `<a>`: acotarlo a botones y links de navegación
-- [ ] Decidir qué pasa con Fredoka
 
 ### P2
 - [ ] Estados vacíos de biblioteca y stats
@@ -175,6 +168,8 @@ a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarl
 - [ ] Auditoría de accesibilidad WCAG AA (contraste de `--color-muted` sobre `sand-50` está justo)
 
 ### Hecho ✅
+- [x] `min-height/min-width: 44px` acotado a `button`, `[role=button]` y `nav a` — ya no deforma
+      los links de texto. Los links de estado vacío usan `min-h-touch` para conservar el tap target
 - [x] Editar/borrar movidos al detalle + migración de iconos a Carbon (`5155e2d`)
 - [x] Sesión guiada: countdown al inicio, mute, fullscreen, video más grande (`f80d8e9`, `7db04bd`)
 - [x] Hoja de registro: cierra al elegir, bloquea scroll de fondo, por encima del menú (`4643a97`, `b4a9607`)
