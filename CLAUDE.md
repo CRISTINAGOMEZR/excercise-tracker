@@ -23,6 +23,16 @@ cueste dinero, publicar hacia fuera, reescrituras grandes.
 
 Ante la duda entre dos niveles, elige el más restrictivo.
 
+**Antes de cazar bugs, revisa las PRs abiertas.** El 3, 4 y 5 de agosto de 2026 tres
+corridas seguidas "descubrieron" el mismo bug de fechas en UTC y abrieron tres PRs
+independientes para arreglarlo (#2, #3, #4), porque ninguna comprobó si ya había una
+PR abierta para ese problema. Antes de invocar a `bug-hunter`/`ui-reviewer`/`deps-security`/
+`test-quality` sobre un área nueva, lista las PRs abiertas del repo. Si el hallazgo que
+estás por perseguir ya tiene una PR sin revisar cubriéndolo, no abras otra — súmate a
+esa PR si hace falta, o pasa a otro foco. Si hay más de 2 PRs abiertas sin revisar en
+total, esta corrida no abre ninguna PR nueva: el resultado del día es un resumen para
+Cristina de qué hay pendiente y en qué orden conviene revisarlo.
+
 **Git:** nunca commitees a `main`. Rama `claude/<tipo>-<descripción>` (tipos: `fix`,
 `feat`, `chore`, `a11y`, `deps`, `test`). `npm run build` siempre antes de commitear.
 
