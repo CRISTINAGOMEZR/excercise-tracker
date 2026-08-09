@@ -61,6 +61,9 @@ export default function GuidedSession({
 
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  // Evita registrar el entrenamiento dos veces (doble toque en "Marcar como
+  // completado", o pulsarlo en la pantalla final y otra vez en la hoja de salir).
+  const completado = useRef(false);
 
   const total = items.length;
   const item = items[index];
@@ -126,6 +129,8 @@ export default function GuidedSession({
     setIndex(0);
   }
   function complete() {
+    if (completado.current) return;
+    completado.current = true;
     clearTimer();
     setConfirmExit(false);
     onComplete();
