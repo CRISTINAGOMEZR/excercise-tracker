@@ -298,11 +298,22 @@ export async function getRachaActual(): Promise<number> {
   const fechas = [...new Set(snap.docs.map((d) => d.data().fecha as string))];
   if (fechas.length === 0) return 0;
 
-  let racha = 0;
   const hoy = new Date();
+  const hoyStr = hoy.toISOString().split('T')[0];
+
+  // Si todavía no hay registro de hoy, la racha puede seguir viva desde ayer.
+  let offset = 0;
+  if (fechas[0] !== hoyStr) {
+    const ayer = new Date(hoy);
+    ayer.setDate(hoy.getDate() - 1);
+    if (fechas[0] !== ayer.toISOString().split('T')[0]) return 0;
+    offset = 1;
+  }
+
+  let racha = 0;
   for (let i = 0; i < fechas.length; i++) {
     const esperada = new Date(hoy);
-    esperada.setDate(hoy.getDate() - i);
+    esperada.setDate(hoy.getDate() - i - offset);
     const esperadaStr = esperada.toISOString().split('T')[0];
     if (fechas[i] === esperadaStr) racha++;
     else break;
