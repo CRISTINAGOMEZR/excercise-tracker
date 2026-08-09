@@ -72,7 +72,7 @@ export default function LibraryPage() {
             <div className="text-center py-20 space-y-3">
               <div className="flex justify-center opacity-20"><IconLibrary size={48} /></div>
               <p style={{ color: 'var(--color-muted)' }}>No hay nada todavía.</p>
-              <a href="/add" className="inline-block text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
+              <a href="/add" className="inline-flex items-center min-h-touch text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
                 Agrega lo primero
               </a>
             </div>

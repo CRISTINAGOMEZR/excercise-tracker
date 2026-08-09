@@ -301,7 +301,7 @@ export default function TodayPage() {
                   <p style={{ color: 'var(--color-muted)' }}>
                     Tu biblioteca está vacía. Registra un entrenamiento arriba o agrega ejercicios.
                   </p>
-                  <a href="/add" className="inline-block text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
+                  <a href="/add" className="inline-flex items-center min-h-touch text-sm underline underline-offset-4" style={{ color: 'var(--color-accent)' }}>
                     Agregar ejercicio
                   </a>
                 </div>
