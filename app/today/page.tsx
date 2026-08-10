@@ -23,6 +23,7 @@ import {
   getRachaActual,
   getTotalSemana,
 } from '@/lib/firestore';
+import { hoyStr } from '@/lib/stats';
 import type { ActividadGuardada, Exercise, Registro, Rutina } from '@/types';
 
 export default function TodayPage() {
@@ -87,7 +88,7 @@ export default function TodayPage() {
       const id = await marcarHecho(ex.id);
       setRegistros((prev) => [
         ...prev,
-        { id, ejercicioId: ex.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
+        { id, ejercicioId: ex.id, fecha: hoyStr(), completadoAt: new Date() },
       ]);
     }
     refreshStats();
@@ -103,7 +104,7 @@ export default function TodayPage() {
       const id = await marcarRutinaHecha(rut.id);
       setRegistros((prev) => [
         ...prev,
-        { id, rutinaId: rut.id, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
+        { id, rutinaId: rut.id, fecha: hoyStr(), completadoAt: new Date() },
       ]);
     }
     refreshStats();
@@ -116,7 +117,7 @@ export default function TodayPage() {
     const id = await registrarActividad(nombre);
     setRegistros((prev) => [
       ...prev,
-      { id, actividad: nombre, fecha: new Date().toISOString().split('T')[0], completadoAt: new Date() },
+      { id, actividad: nombre, fecha: hoyStr(), completadoAt: new Date() },
     ]);
     // Refresca las pills (puede haber una nueva o subir de uso).
     getActividadesGuardadas().then(setSaved);

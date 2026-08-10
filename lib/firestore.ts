@@ -15,12 +15,14 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { hoyStr, ymdOffset } from './stats';
 import type { ActividadGuardada, Exercise, Registro, Rutina, RutinaItem } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Fecha de hoy en la zona horaria local (YYYY-MM-DD), como se guardan los registros. */
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  return hoyStr();
 }
 
 // ─── Ejercicios ───────────────────────────────────────────────────────────────
@@ -298,24 +300,18 @@ export async function getRachaActual(): Promise<number> {
   const fechas = [...new Set(snap.docs.map((d) => d.data().fecha as string))];
   if (fechas.length === 0) return 0;
 
-  const hoy = new Date();
-  const hoyStr = hoy.toISOString().split('T')[0];
+  const hoy = hoyStr();
 
   // Si todavía no hay registro de hoy, la racha puede seguir viva desde ayer.
   let offset = 0;
-  if (fechas[0] !== hoyStr) {
-    const ayer = new Date(hoy);
-    ayer.setDate(hoy.getDate() - 1);
-    if (fechas[0] !== ayer.toISOString().split('T')[0]) return 0;
+  if (fechas[0] !== hoy) {
+    if (fechas[0] !== ymdOffset(-1)) return 0;
     offset = 1;
   }
 
   let racha = 0;
   for (let i = 0; i < fechas.length; i++) {
-    const esperada = new Date(hoy);
-    esperada.setDate(hoy.getDate() - i - offset);
-    const esperadaStr = esperada.toISOString().split('T')[0];
-    if (fechas[i] === esperadaStr) racha++;
+    if (fechas[i] === ymdOffset(-i - offset)) racha++;
     else break;
   }
   return racha;
@@ -323,9 +319,7 @@ export async function getRachaActual(): Promise<number> {
 
 /** Total de ejercicios completados en los últimos 7 días */
 export async function getTotalSemana(): Promise<number> {
-  const hace7 = new Date();
-  hace7.setDate(hace7.getDate() - 6);
-  const desde = hace7.toISOString().split('T')[0];
+  const desde = ymdOffset(-6);
   const snap = await getDocs(
     query(collection(db, 'registros'), where('fecha', '>=', desde))
   );
