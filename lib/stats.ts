@@ -1,8 +1,28 @@
 import type { Exercise, Registro } from '@/types';
 
-/** Fecha en formato YYYY-MM-DD (UTC, igual que se guardan los registros). */
+/**
+ * Fecha de calendario en formato YYYY-MM-DD en la zona horaria **local**.
+ * Los registros se guardan con la fecha local (ver CLAUDE.md): usar
+ * `toISOString()` aquí desplazaba el día en cualquier zona distinta de UTC.
+ */
 export function ymd(d: Date): string {
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** Fecha de hoy (local) en YYYY-MM-DD. */
+export function hoyStr(): string {
+  return ymd(new Date());
+}
+
+/**
+ * Fecha local en YYYY-MM-DD desplazada `dias` respecto a hoy (negativo = pasado).
+ * Se ancla al mediodía para que los cambios de horario de verano no muevan el día.
+ */
+export function ymdOffset(dias: number, base: Date = new Date()): string {
+  return ymd(new Date(base.getFullYear(), base.getMonth(), base.getDate() + dias, 12));
 }
 
 /** Conteo de registros por fecha. */
