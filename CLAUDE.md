@@ -121,9 +121,11 @@ types/index.ts              # Exercise, Registro, ActividadGuardada, Rutina,
 - `ActividadGuardada` — actividades libres que se guardan solas para reusar como pills,
   ordenadas por `usos`.
 
-⚠️ **Las fechas se guardan como string local `YYYY-MM-DD`** (ver `ymd()` en `lib/stats.ts`).
-No las conviertas a UTC ni a `Date` para comparar — se rompe la racha en el cambio de día.
-Este es el punto más frágil del proyecto.
+⚠️ **Las fechas se guardan como string `YYYY-MM-DD` en UTC**, no en hora local (`ymd()` en
+`lib/stats.ts` y `todayStr()` en `lib/firestore.ts` usan `toISOString()`). Este comentario decía
+antes "local" — era incorrecto, el código siempre fue UTC de forma consistente. No lo cambies a
+`Date`/hora local para comparar sin migrar los datos ya guardados: ver issue sobre la convención
+UTC vs. local. Este es el punto más frágil del proyecto.
 
 ## Variables de entorno
 
@@ -152,22 +154,19 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 - Editar y borrar viven en el **detalle** (`library/[id]`), no en las cards. Fue una decisión
   explícita (commit `5155e2d`) — no las devuelvas a las cards.
 
-## Estado actual
-
-**Sin commitear ahora mismo:** `app/globals.css` añade la fuente **Fredoka** al import de Google
-Fonts, pero no está declarada en `tailwind.config.ts` ni usada en ningún componente. O es trabajo
-a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarlo.
-
 ## Backlog
 
 ### P0
-- [ ] No hay CI. Sin build en verde automático, el auto-merge 🟢 no tiene red de seguridad.
-      → añadir `.github/workflows/check.yml` con `npm run build`
+- [ ] 🔴 Decidir la convención de fecha: ¿el "día" cambia a medianoche UTC (comportamiento
+      actual) o a medianoche hora local de Cristina? Migra datos ya guardados en Firestore —
+      no es un fix de código, es una decisión de producto. Ver issue en GitHub.
 
 ### P1
 - [ ] Tests para `lib/stats.ts` — sobre todo `rachaMasLarga` y el manejo de fechas en cambio de día
 - [ ] Revisar el `min-height: 44px` global sobre `<a>`: acotarlo a botones y links de navegación
-- [ ] Decidir qué pasa con Fredoka
+- [ ] `porCategoria` (`lib/stats.ts`) cuenta los registros de rutina como "Libre" en el gráfico
+      de `/stats`. Cambio de una línea, pero es una etiqueta de UI nueva ("Rutina" no es
+      realmente una categoría) — que lo decida Cristina.
 
 ### P2
 - [ ] Estados vacíos de biblioteca y stats
@@ -175,6 +174,7 @@ a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarl
 - [ ] Auditoría de accesibilidad WCAG AA (contraste de `--color-muted` sobre `sand-50` está justo)
 
 ### Hecho ✅
+- [x] CI con `npm run build` en cada PR (`.github/workflows/check.yml`)
 - [x] Editar/borrar movidos al detalle + migración de iconos a Carbon (`5155e2d`)
 - [x] Sesión guiada: countdown al inicio, mute, fullscreen, video más grande (`f80d8e9`, `7db04bd`)
 - [x] Hoja de registro: cierra al elegir, bloquea scroll de fondo, por encima del menú (`4643a97`, `b4a9607`)
