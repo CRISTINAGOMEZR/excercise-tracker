@@ -305,7 +305,7 @@ export async function getRachaActual(): Promise<number> {
   let offset = 0;
   if (fechas[0] !== hoyStr) {
     const ayer = new Date(hoy);
-    ayer.setDate(hoy.getDate() - 1);
+    ayer.setUTCDate(hoy.getUTCDate() - 1);
     if (fechas[0] !== ayer.toISOString().split('T')[0]) return 0;
     offset = 1;
   }
@@ -313,7 +313,7 @@ export async function getRachaActual(): Promise<number> {
   let racha = 0;
   for (let i = 0; i < fechas.length; i++) {
     const esperada = new Date(hoy);
-    esperada.setDate(hoy.getDate() - i - offset);
+    esperada.setUTCDate(hoy.getUTCDate() - i - offset);
     const esperadaStr = esperada.toISOString().split('T')[0];
     if (fechas[i] === esperadaStr) racha++;
     else break;
@@ -324,7 +324,7 @@ export async function getRachaActual(): Promise<number> {
 /** Total de ejercicios completados en los últimos 7 días */
 export async function getTotalSemana(): Promise<number> {
   const hace7 = new Date();
-  hace7.setDate(hace7.getDate() - 6);
+  hace7.setUTCDate(hace7.getUTCDate() - 6);
   const desde = hace7.toISOString().split('T')[0];
   const snap = await getDocs(
     query(collection(db, 'registros'), where('fecha', '>=', desde))

@@ -2,9 +2,10 @@
 export function getYouTubeId(url: string): string | null {
   const patterns = [
     /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+    // `v=` puede no ser el primer parámetro: ?list=...&v=ID, ?app=desktop&v=ID
+    /youtube\.com\/watch\?(?:[^#]*&)?v=([a-zA-Z0-9_-]{11})/,
+    /youtube(?:-nocookie)?\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/(?:shorts|live|v)\/([a-zA-Z0-9_-]{11})/,
   ];
   for (const p of patterns) {
     const m = url.match(p);
@@ -15,13 +16,15 @@ export function getYouTubeId(url: string): string | null {
 
 /** Extrae el ID de un enlace de Vimeo. Devuelve null si no es válido. */
 export function getVimeoId(url: string): string | null {
-  const m = url.match(/vimeo\.com\/(\d+)/);
+  // Cubre vimeo.com/ID, player.vimeo.com/video/ID, /channels/x/ID, /groups/x/videos/ID
+  const m = url.match(/vimeo\.com\/(?:[^/?#]+\/)*(\d+)(?:[/?#]|$)/);
   return m ? m[1] : null;
 }
 
 /** Extrae el tipo y código de un enlace de Instagram (reel / post / tv). */
 export function getInstagram(url: string): { type: string; code: string } | null {
-  const m = url.match(/instagram\.com\/(reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
+  // Admite también la forma con usuario: instagram.com/<usuario>/reel/<code>
+  const m = url.match(/instagram\.com\/(?:[^/?#]+\/)?(reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
   if (!m) return null;
   // "reels" (plural) y "reel" apuntan al mismo recurso; normalizamos a "reel".
   const type = m[1] === 'reels' ? 'reel' : m[1];
