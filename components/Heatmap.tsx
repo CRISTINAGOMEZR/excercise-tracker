@@ -20,14 +20,14 @@ function shade(count: number): string {
 }
 
 export default function Heatmap({ counts, weeks = 18 }: Props) {
-  // Base: hoy (UTC). La última columna es la semana actual.
+  // Base: hoy en hora local, la misma referencia que `ymd()` y que la `fecha`
+  // de los registros. La última columna es la semana actual.
   const now = new Date();
-  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const dow = todayUTC.getUTCDay(); // 0=Dom
+  const hoyKey = ymd(now);
+  const dow = now.getDay(); // 0=Dom
 
   // Inicio = domingo de hace (weeks-1) semanas.
-  const start = new Date(todayUTC);
-  start.setUTCDate(todayUTC.getUTCDate() - dow - (weeks - 1) * 7);
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow - (weeks - 1) * 7);
 
   const cols: { date: Date; key: string; future: boolean }[][] = [];
   const monthLabels: (string | null)[] = [];
@@ -36,12 +36,14 @@ export default function Heatmap({ counts, weeks = 18 }: Props) {
     const col: { date: Date; key: string; future: boolean }[] = [];
     let labelForCol: string | null = null;
     for (let d = 0; d < 7; d++) {
-      const date = new Date(start);
-      date.setUTCDate(start.getUTCDate() + w * 7 + d);
-      const future = date.getTime() > todayUTC.getTime();
+      // Se construye por componentes de calendario (no sumando milisegundos)
+      // para que el cambio de horario de verano no desplace la rejilla un día.
+      const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + d);
+      const key = ymd(date);
+      const future = key > hoyKey; // YYYY-MM-DD se ordena como string
       // etiqueta de mes: primera vez que aparece el día 1-7 del mes en la fila superior
-      if (d === 0 && date.getUTCDate() <= 7) labelForCol = MESES[date.getUTCMonth()];
-      col.push({ date, key: ymd(date), future });
+      if (d === 0 && date.getDate() <= 7) labelForCol = MESES[date.getMonth()];
+      col.push({ date, key, future });
     }
     monthLabels.push(labelForCol);
     cols.push(col);

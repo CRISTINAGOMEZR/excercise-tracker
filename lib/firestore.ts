@@ -15,12 +15,15 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { shiftYmd, ymd } from './stats';
 import type { ActividadGuardada, Exercise, Registro, Rutina, RutinaItem } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Día natural de hoy en hora local — el mismo formato en el que se guardan
+ *  los registros. Ver `ymd()` en `lib/stats.ts`: NO usar UTC aquí. */
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  return ymd(new Date());
 }
 
 // ─── Ejercicios ───────────────────────────────────────────────────────────────
@@ -298,24 +301,18 @@ export async function getRachaActual(): Promise<number> {
   const fechas = [...new Set(snap.docs.map((d) => d.data().fecha as string))];
   if (fechas.length === 0) return 0;
 
-  const hoy = new Date();
-  const hoyStr = hoy.toISOString().split('T')[0];
+  const hoyStr = todayStr();
 
   // Si todavía no hay registro de hoy, la racha puede seguir viva desde ayer.
   let offset = 0;
   if (fechas[0] !== hoyStr) {
-    const ayer = new Date(hoy);
-    ayer.setDate(hoy.getDate() - 1);
-    if (fechas[0] !== ayer.toISOString().split('T')[0]) return 0;
+    if (fechas[0] !== shiftYmd(hoyStr, -1)) return 0;
     offset = 1;
   }
 
   let racha = 0;
   for (let i = 0; i < fechas.length; i++) {
-    const esperada = new Date(hoy);
-    esperada.setDate(hoy.getDate() - i - offset);
-    const esperadaStr = esperada.toISOString().split('T')[0];
-    if (fechas[i] === esperadaStr) racha++;
+    if (fechas[i] === shiftYmd(hoyStr, -i - offset)) racha++;
     else break;
   }
   return racha;
@@ -323,9 +320,7 @@ export async function getRachaActual(): Promise<number> {
 
 /** Total de ejercicios completados en los últimos 7 días */
 export async function getTotalSemana(): Promise<number> {
-  const hace7 = new Date();
-  hace7.setDate(hace7.getDate() - 6);
-  const desde = hace7.toISOString().split('T')[0];
+  const desde = shiftYmd(todayStr(), -6);
   const snap = await getDocs(
     query(collection(db, 'registros'), where('fecha', '>=', desde))
   );

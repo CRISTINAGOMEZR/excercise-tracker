@@ -1,8 +1,33 @@
 import type { Exercise, Registro } from '@/types';
 
-/** Fecha en formato YYYY-MM-DD (UTC, igual que se guardan los registros). */
+/**
+ * Fecha en formato YYYY-MM-DD a partir de los componentes **locales** del Date.
+ *
+ * Es la misma semántica con la que se guardan los registros (`Registro.fecha`):
+ * el día natural de quien usa la app, no el día UTC. No usar `toISOString()`
+ * aquí — entre medianoche y el offset de la zona horaria (hasta las 02:00 en
+ * España en verano) devolvería el día anterior y el registro se guardaría en
+ * el día equivocado.
+ */
 export function ymd(d: Date): string {
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
+/**
+ * Desplaza una fecha `YYYY-MM-DD` un número de días (puede ser negativo) y
+ * devuelve el resultado en el mismo formato.
+ *
+ * Opera sobre el calendario local incrementando el componente de día y dejando
+ * que `Date` normalice, así que es inmune al cambio de horario de verano: no
+ * suma milisegundos, y por tanto un día de 23h o de 25h sigue contando como
+ * exactamente un día.
+ */
+export function shiftYmd(fecha: string, dias: number): string {
+  const [y, m, d] = fecha.split('-').map(Number);
+  return ymd(new Date(y, m - 1, d + dias));
 }
 
 /** Conteo de registros por fecha. */
@@ -19,6 +44,9 @@ export function rachaMasLarga(registros: Registro[]): number {
   let best = 1;
   let cur = 1;
   for (let i = 1; i < dias.length; i++) {
+    // Las dos fechas ya son días naturales (YYYY-MM-DD): se interpretan como
+    // medianoche UTC sólo para restarlas. Al ser ambas UTC la diferencia es
+    // exacta y no la afecta el horario de verano.
     const prev = Date.parse(`${dias[i - 1]}T00:00:00Z`);
     const curD = Date.parse(`${dias[i]}T00:00:00Z`);
     const diff = Math.round((curD - prev) / 86_400_000);
