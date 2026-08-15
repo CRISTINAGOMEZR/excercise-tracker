@@ -160,10 +160,6 @@ a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarl
 
 ## Backlog
 
-### P0
-- [ ] No hay CI. Sin build en verde automático, el auto-merge 🟢 no tiene red de seguridad.
-      → añadir `.github/workflows/check.yml` con `npm run build`
-
 ### P1
 - [ ] Tests para `lib/stats.ts` — sobre todo `rachaMasLarga` y el manejo de fechas en cambio de día
 - [ ] Revisar el `min-height: 44px` global sobre `<a>`: acotarlo a botones y links de navegación
@@ -175,6 +171,7 @@ a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarl
 - [ ] Auditoría de accesibilidad WCAG AA (contraste de `--color-muted` sobre `sand-50` está justo)
 
 ### Hecho ✅
+- [x] CI: `.github/workflows/check.yml` corre `npm run build` en push a `main` y en cada PR
 - [x] Editar/borrar movidos al detalle + migración de iconos a Carbon (`5155e2d`)
 - [x] Sesión guiada: countdown al inicio, mute, fullscreen, video más grande (`f80d8e9`, `7db04bd`)
 - [x] Hoja de registro: cierra al elegir, bloquea scroll de fondo, por encima del menú (`4643a97`, `b4a9607`)
