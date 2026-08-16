@@ -15,12 +15,13 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { ymd } from './stats';
 import type { ActividadGuardada, Exercise, Registro, Rutina, RutinaItem } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  return ymd(new Date());
 }
 
 // ─── Ejercicios ───────────────────────────────────────────────────────────────
@@ -299,14 +300,14 @@ export async function getRachaActual(): Promise<number> {
   if (fechas.length === 0) return 0;
 
   const hoy = new Date();
-  const hoyStr = hoy.toISOString().split('T')[0];
+  const hoyStr = ymd(hoy);
 
   // Si todavía no hay registro de hoy, la racha puede seguir viva desde ayer.
   let offset = 0;
   if (fechas[0] !== hoyStr) {
     const ayer = new Date(hoy);
     ayer.setDate(hoy.getDate() - 1);
-    if (fechas[0] !== ayer.toISOString().split('T')[0]) return 0;
+    if (fechas[0] !== ymd(ayer)) return 0;
     offset = 1;
   }
 
@@ -314,7 +315,7 @@ export async function getRachaActual(): Promise<number> {
   for (let i = 0; i < fechas.length; i++) {
     const esperada = new Date(hoy);
     esperada.setDate(hoy.getDate() - i - offset);
-    const esperadaStr = esperada.toISOString().split('T')[0];
+    const esperadaStr = ymd(esperada);
     if (fechas[i] === esperadaStr) racha++;
     else break;
   }
@@ -325,7 +326,7 @@ export async function getRachaActual(): Promise<number> {
 export async function getTotalSemana(): Promise<number> {
   const hace7 = new Date();
   hace7.setDate(hace7.getDate() - 6);
-  const desde = hace7.toISOString().split('T')[0];
+  const desde = ymd(hace7);
   const snap = await getDocs(
     query(collection(db, 'registros'), where('fecha', '>=', desde))
   );
