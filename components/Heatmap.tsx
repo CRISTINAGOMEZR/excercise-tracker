@@ -1,6 +1,6 @@
 'use client';
 
-import { ymd } from '@/lib/stats';
+import { ymd } from '@/lib/dates';
 
 interface Props {
   counts: Map<string, number>;
@@ -20,14 +20,15 @@ function shade(count: number): string {
 }
 
 export default function Heatmap({ counts, weeks = 18 }: Props) {
-  // Base: hoy (UTC). La última columna es la semana actual.
-  const now = new Date();
-  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const dow = todayUTC.getUTCDay(); // 0=Dom
+  // Base: hoy a medianoche LOCAL (igual que se guardan los registros).
+  // La última columna es la semana actual.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dow = today.getDay(); // 0=Dom
 
   // Inicio = domingo de hace (weeks-1) semanas.
-  const start = new Date(todayUTC);
-  start.setUTCDate(todayUTC.getUTCDate() - dow - (weeks - 1) * 7);
+  const start = new Date(today);
+  start.setDate(today.getDate() - dow - (weeks - 1) * 7);
 
   const cols: { date: Date; key: string; future: boolean }[][] = [];
   const monthLabels: (string | null)[] = [];
@@ -37,10 +38,10 @@ export default function Heatmap({ counts, weeks = 18 }: Props) {
     let labelForCol: string | null = null;
     for (let d = 0; d < 7; d++) {
       const date = new Date(start);
-      date.setUTCDate(start.getUTCDate() + w * 7 + d);
-      const future = date.getTime() > todayUTC.getTime();
+      date.setDate(start.getDate() + w * 7 + d);
+      const future = date.getTime() > today.getTime();
       // etiqueta de mes: primera vez que aparece el día 1-7 del mes en la fila superior
-      if (d === 0 && date.getUTCDate() <= 7) labelForCol = MESES[date.getUTCMonth()];
+      if (d === 0 && date.getDate() <= 7) labelForCol = MESES[date.getMonth()];
       col.push({ date, key: ymd(date), future });
     }
     monthLabels.push(labelForCol);

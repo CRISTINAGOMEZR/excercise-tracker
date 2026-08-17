@@ -1,9 +1,8 @@
 import type { Exercise, Registro } from '@/types';
+import { hoy, ymd } from './dates';
 
-/** Fecha en formato YYYY-MM-DD (UTC, igual que se guardan los registros). */
-export function ymd(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
+// Las fechas viven en `lib/dates.ts` y son SIEMPRE locales (ver CLAUDE.md).
+export { ymd };
 
 /** Conteo de registros por fecha. */
 export function countByDate(registros: Registro[]): Map<string, number> {
@@ -31,7 +30,7 @@ export function rachaMasLarga(registros: Registro[]): number {
 
 /** Total de registros del mes actual. */
 export function totalEsteMes(registros: Registro[]): number {
-  const mes = ymd(new Date()).slice(0, 7); // YYYY-MM
+  const mes = hoy().slice(0, 7); // YYYY-MM (local)
   return registros.filter((r) => r.fecha.startsWith(mes)).length;
 }
 
