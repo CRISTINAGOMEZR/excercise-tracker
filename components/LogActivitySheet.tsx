@@ -44,10 +44,20 @@ export default function LogActivitySheet({
   if (!open) return null;
 
   function pickExercise(ex: Exercise) {
+    // Si ya está hecho, la pill solo informa — no la volvemos a tocar aquí
+    // porque el toggle de abajo borraría el registro sin confirmación.
+    if (isExerciseDone(ex.id)) {
+      onClose();
+      return;
+    }
     onMarkExercise(ex);
     onClose();
   }
   function pickRutina(rut: Rutina) {
+    if (isRutinaDone(rut.id)) {
+      onClose();
+      return;
+    }
     onMarkRutina(rut);
     onClose();
   }
