@@ -20,14 +20,16 @@ function shade(count: number): string {
 }
 
 export default function Heatmap({ counts, weeks = 18 }: Props) {
-  // Base: hoy (UTC). La última columna es la semana actual.
+  // Base: hoy (hora local, igual que las fechas que se guardan). Ancla a mediodía
+  // para que sumar/restar días con setDate no se rompa al cruzar un cambio de horario.
+  // La última columna es la semana actual.
   const now = new Date();
-  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const dow = todayUTC.getUTCDay(); // 0=Dom
+  const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
+  const dow = todayLocal.getDay(); // 0=Dom
 
   // Inicio = domingo de hace (weeks-1) semanas.
-  const start = new Date(todayUTC);
-  start.setUTCDate(todayUTC.getUTCDate() - dow - (weeks - 1) * 7);
+  const start = new Date(todayLocal);
+  start.setDate(todayLocal.getDate() - dow - (weeks - 1) * 7);
 
   const cols: { date: Date; key: string; future: boolean }[][] = [];
   const monthLabels: (string | null)[] = [];
@@ -37,10 +39,10 @@ export default function Heatmap({ counts, weeks = 18 }: Props) {
     let labelForCol: string | null = null;
     for (let d = 0; d < 7; d++) {
       const date = new Date(start);
-      date.setUTCDate(start.getUTCDate() + w * 7 + d);
-      const future = date.getTime() > todayUTC.getTime();
+      date.setDate(start.getDate() + w * 7 + d);
+      const future = date.getTime() > todayLocal.getTime();
       // etiqueta de mes: primera vez que aparece el día 1-7 del mes en la fila superior
-      if (d === 0 && date.getUTCDate() <= 7) labelForCol = MESES[date.getUTCMonth()];
+      if (d === 0 && date.getDate() <= 7) labelForCol = MESES[date.getMonth()];
       col.push({ date, key: ymd(date), future });
     }
     monthLabels.push(labelForCol);

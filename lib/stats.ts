@@ -1,8 +1,24 @@
 import type { Exercise, Registro } from '@/types';
 
-/** Fecha en formato YYYY-MM-DD (UTC, igual que se guardan los registros). */
+/** Fecha en formato YYYY-MM-DD, en hora LOCAL (igual que se guardan los registros). */
 export function ymd(d: Date): string {
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** Fecha de hoy en formato YYYY-MM-DD, en hora local. */
+export function todayStr(): string {
+  return ymd(new Date());
+}
+
+/** Fecha de hoy + n días (n negativo para el pasado), en formato YYYY-MM-DD local.
+ *  Ancla a mediodía para que la resta de días no se rompa al cruzar un cambio de horario. */
+export function diasDesdeHoy(n: number): string {
+  const hoy = new Date();
+  const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + n, 12);
+  return ymd(d);
 }
 
 /** Conteo de registros por fecha. */

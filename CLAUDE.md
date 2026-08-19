@@ -154,20 +154,19 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 
 ## Estado actual
 
-**Sin commitear ahora mismo:** `app/globals.css` añade la fuente **Fredoka** al import de Google
-Fonts, pero no está declarada en `tailwind.config.ts` ni usada en ningún componente. O es trabajo
-a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarlo.
-
 ## Backlog
 
 ### P0
-- [ ] No hay CI. Sin build en verde automático, el auto-merge 🟢 no tiene red de seguridad.
-      → añadir `.github/workflows/check.yml` con `npm run build`
+_(ninguno abierto)_
 
 ### P1
-- [ ] Tests para `lib/stats.ts` — sobre todo `rachaMasLarga` y el manejo de fechas en cambio de día
+- [ ] Tests para `lib/stats.ts` — sobre todo `rachaMasLarga` y el manejo de fechas en cambio de día.
+      Requiere elegir un test runner (dependencia nueva) — no se puede hacer en una corrida 🟢/verde.
 - [ ] Revisar el `min-height: 44px` global sobre `<a>`: acotarlo a botones y links de navegación
-- [ ] Decidir qué pasa con Fredoka
+- [ ] `app/today/page.tsx` carga `registros` una sola vez al montar, sin refrescar en
+      `visibilitychange`/`focus`. Si la PWA queda abierta toda la noche, tocar una card marcada
+      ayer entra en la rama "ya existe" y **borra el registro de ayer**. Necesita listener de
+      ciclo de vida, no es un simple cambio de fecha. Ver issue en GitHub.
 
 ### P2
 - [ ] Estados vacíos de biblioteca y stats
@@ -175,6 +174,8 @@ a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarl
 - [ ] Auditoría de accesibilidad WCAG AA (contraste de `--color-muted` sobre `sand-50` está justo)
 
 ### Hecho ✅
+- [x] CI con `npm run build` en `.github/workflows/check.yml`
+- [x] Fredoka: nunca se terminó de añadir, ya no está en `globals.css`. Ítem cerrado.
 - [x] Editar/borrar movidos al detalle + migración de iconos a Carbon (`5155e2d`)
 - [x] Sesión guiada: countdown al inicio, mute, fullscreen, video más grande (`f80d8e9`, `7db04bd`)
 - [x] Hoja de registro: cierra al elegir, bloquea scroll de fondo, por encima del menú (`4643a97`, `b4a9607`)
