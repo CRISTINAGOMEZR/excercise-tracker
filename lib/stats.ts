@@ -1,8 +1,27 @@
 import type { Exercise, Registro } from '@/types';
 
-/** Fecha en formato YYYY-MM-DD (UTC, igual que se guardan los registros). */
+/**
+ * Fecha en formato YYYY-MM-DD del **día local** del usuario.
+ * Los registros se guardan con este mismo formato: usar UTC aquí desplazaba el
+ * día (entrenar a las 21:00 en UTC-4 se guardaba como el día siguiente).
+ */
 export function ymd(d: Date): string {
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dia}`;
+}
+
+/**
+ * Suma (o resta, con n negativo) días a una fecha YYYY-MM-DD.
+ * Opera sobre el calendario en UTC para no depender del huso ni del horario
+ * de verano: la entrada y la salida son siempre días, no instantes.
+ */
+export function addDias(fecha: string, n: number): string {
+  const [y, m, d] = fecha.split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  t.setUTCDate(t.getUTCDate() + n);
+  return t.toISOString().split('T')[0];
 }
 
 /** Conteo de registros por fecha. */
