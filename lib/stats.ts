@@ -1,8 +1,11 @@
 import type { Exercise, Registro } from '@/types';
 
-/** Fecha en formato YYYY-MM-DD (UTC, igual que se guardan los registros). */
+/** Fecha en formato YYYY-MM-DD (hora local, igual que se guardan los registros). */
 export function ymd(d: Date): string {
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 /** Conteo de registros por fecha. */
