@@ -144,6 +144,21 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 
 ## Reglas al trabajar aquí
 
+- **Antes de que el `pm` elija el foco del día, tiene que revisar las pull requests
+  abiertas** (`list_pull_requests` / `gh pr list --state all`), no solo el backlog de
+  este archivo. El fix de fechas UTC→local (`ymd()` en `lib/stats.ts`) se propuso de
+  forma independiente **al menos 9 veces** entre el 10 y el 22 de agosto de 2026 (PRs
+  #9, #12, #13, #16, #18, #20, #21, #22 — casi todas con diffs casi idénticos) porque
+  cada corrida autónoma redescubría el mismo bug sin comprobar que ya había una PR
+  abierta arreglándolo. Un `pm` ya hizo la consolidación el 15-ago (ver comentario en
+  #9): recomienda mergear **#9** (tiene `ymdOffset()` anclado al mediodía, a prueba de
+  cambio de horario), cerrar el resto como duplicadas, y de #10 rescatar solo el fix
+  de regex de enlaces de video (no el de fechas, que va en dirección contraria).
+  Sigue pendiente de que Cristina decida — nadie más debe tocar esta lógica de fechas
+  hasta que se resuelva ese cúmulo.
+  **Regla:** si el hallazgo de bug-hunter/ui-reviewer/deps-security/test-quality ya
+  tiene una PR abierta tocando los mismos archivos con el mismo fix, no abrir otra —
+  comentar en la existente si hay algo nuevo que aportar, o elegir otro foco.
 - `npm run build` **siempre** antes de commitear.
 - No hay tests todavía. Si vas a añadirlos, empieza por `lib/stats.ts` y `lib/videoUtils.ts` —
   son puras y es donde están las reglas de negocio.
@@ -154,20 +169,20 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 
 ## Estado actual
 
-**Sin commitear ahora mismo:** `app/globals.css` añade la fuente **Fredoka** al import de Google
-Fonts, pero no está declarada en `tailwind.config.ts` ni usada en ningún componente. O es trabajo
-a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarlo.
+Sin cambios sin commitear. (La fuente **Fredoka** que este archivo llevaba tiempo listando
+como "suelta" en `app/globals.css` ya no está en el archivo — confirmado en `main`.)
 
 ## Backlog
 
 ### P0
-- [ ] No hay CI. Sin build en verde automático, el auto-merge 🟢 no tiene red de seguridad.
-      → añadir `.github/workflows/check.yml` con `npm run build`
+- [ ] **Resolver el cúmulo de PRs duplicadas del fix de fechas UTC→local** — ver la nota en
+      "Reglas al trabajar aquí" arriba. Candidata a mergear: #9. Cerrar como duplicadas:
+      #12, #13, #21, #22 (y cualquier otra que reaparezca con el mismo diff). De #10, rescatar
+      solo el fix de regex de video.
 
 ### P1
 - [ ] Tests para `lib/stats.ts` — sobre todo `rachaMasLarga` y el manejo de fechas en cambio de día
 - [ ] Revisar el `min-height: 44px` global sobre `<a>`: acotarlo a botones y links de navegación
-- [ ] Decidir qué pasa con Fredoka
 
 ### P2
 - [ ] Estados vacíos de biblioteca y stats
@@ -178,3 +193,5 @@ a medias, o quedó suelto. Preguntar a Cristina antes de borrarlo o de terminarl
 - [x] Editar/borrar movidos al detalle + migración de iconos a Carbon (`5155e2d`)
 - [x] Sesión guiada: countdown al inicio, mute, fullscreen, video más grande (`f80d8e9`, `7db04bd`)
 - [x] Hoja de registro: cierra al elegir, bloquea scroll de fondo, por encima del menú (`4643a97`, `b4a9607`)
+- [x] CI con `npm run build` en `.github/workflows/check.yml`
+- [x] Fredoka retirada de `app/globals.css`
