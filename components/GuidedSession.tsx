@@ -58,9 +58,13 @@ export default function GuidedSession({
   const [muted, setMuted] = useState(true);
   const [landscape, setLandscape] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  // Guard sincrónico: `complete()` puede dispararse dos veces (doble tap) antes
+  // de que la navegación desmonte el overlay, y cada llamada crea un registro.
+  const completedRef = useRef(false);
 
   const total = items.length;
   const item = items[index];
@@ -121,15 +125,36 @@ export default function GuidedSession({
   }
   function exitToIntro() {
     clearTimer();
+    leaveFullscreen();
     setConfirmExit(false);
     setPhase('intro');
     setIndex(0);
   }
   function complete() {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    setCompleting(true);
     clearTimer();
+    leaveFullscreen();
     setConfirmExit(false);
     onComplete();
     onBack();
+  }
+
+  // Abrir la hoja de salida durante la cuenta atrás pausa el contador: si no,
+  // el video arrancaba (y sonaba) por detrás mientras la hoja seguía abierta.
+  function requestExit() {
+    if (phase === 'countdown') clearTimer();
+    setConfirmExit(true);
+  }
+  function resumeSession() {
+    setConfirmExit(false);
+    if (phase === 'countdown') runCountdown();
+  }
+
+  function leaveFullscreen() {
+    if (typeof document === 'undefined' || !document.fullscreenElement) return;
+    try { document.exitFullscreen?.()?.catch(() => {}); } catch { /* noop */ }
   }
 
   async function toggleFullscreen() {
@@ -307,7 +332,7 @@ export default function GuidedSession({
             <IconFullscreen size={20} />
           </button>
           <button
-            onClick={() => setConfirmExit(true)}
+            onClick={requestExit}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white"
             style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
             aria-label="Salir"
@@ -373,7 +398,7 @@ export default function GuidedSession({
               />
             ) : (
               <video
-                key={`${item.id}-${muted}`}
+                key={item.id}
                 src={item.url}
                 autoPlay
                 loop
@@ -401,7 +426,8 @@ export default function GuidedSession({
         {phase === 'finished' ? (
           <button
             onClick={complete}
-            className="w-full py-4 rounded-2xl text-white font-medium text-base flex items-center justify-center gap-2"
+            disabled={completing}
+            className="w-full py-4 rounded-2xl text-white font-medium text-base flex items-center justify-center gap-2 disabled:opacity-60"
             style={{ backgroundColor: 'var(--color-accent)' }}
           >
             <IconCheck size={18} /> Marcar como completado
@@ -443,7 +469,7 @@ export default function GuidedSession({
       {confirmExit && (
         <div className="absolute inset-0 z-[70] flex flex-col justify-end">
           <button
-            onClick={() => setConfirmExit(false)}
+            onClick={resumeSession}
             className="absolute inset-0"
             style={{ backgroundColor: 'rgba(15,15,15,0.6)' }}
             aria-label="Cerrar"
@@ -457,7 +483,7 @@ export default function GuidedSession({
             </div>
             <div className="px-5 pt-4 pb-6 space-y-2">
               <button
-                onClick={() => setConfirmExit(false)}
+                onClick={resumeSession}
                 className="w-full py-4 rounded-2xl text-sm font-medium flex items-center justify-center gap-2"
                 style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
               >
@@ -465,7 +491,8 @@ export default function GuidedSession({
               </button>
               <button
                 onClick={complete}
-                className="w-full py-4 rounded-2xl text-white text-sm font-medium flex items-center justify-center gap-2"
+                disabled={completing}
+                className="w-full py-4 rounded-2xl text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60"
                 style={{ backgroundColor: 'var(--color-accent)' }}
               >
                 <IconCheck size={16} /> Marcar como completado
