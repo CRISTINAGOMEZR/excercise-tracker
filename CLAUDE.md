@@ -159,6 +159,24 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
   **Regla:** si el hallazgo de bug-hunter/ui-reviewer/deps-security/test-quality ya
   tiene una PR abierta tocando los mismos archivos con el mismo fix, no abrir otra —
   comentar en la existente si hay algo nuevo que aportar, o elegir otro foco.
+- **Regla (05-sep-2026):** si hay **4 o más PRs abiertas** esperando revisión, esa corrida
+  no manda a ningún especialista a buscar más trabajo — el cuello de botella es la atención
+  de Cristina, no la falta de hallazgos. En vez de eso, el `pm` revisa el estado de la cola
+  (duplicadas, obsoletas, cuál priorizar) y esa revisión es el resultado del día. A 05-sep
+  hay 8 PRs abiertas (la más vieja del 6-ago) y ninguna se ha mergeado desde el 22-ago.
+- ⚠️ **Segundo cúmulo de duplicadas naciendo, mismo patrón que el de fechas:** #5 y #28
+  arreglan el mismo bug (registro duplicado por doble toque en `complete()` de
+  `components/GuidedSession.tsx`) con el mismo guard (`useRef` síncrono). Ninguna es superset
+  de la otra: #28 es superset en `GuidedSession.tsx` (guard + `disabled` en el botón + mute/
+  countdown/fullscreen), pero #5 también cubre el guard de doble toque en `app/today/page.tsx`
+  y `app/library/[id]/page.tsx`, que #28 no toca. Antes de mergear cualquiera de las dos,
+  hay que quedarse con #28 para `GuidedSession.tsx` y rebasear #5 para dejar solo los otros
+  dos archivos. No mandar a `bug-hunter` a por este bug otra vez — ya está encontrado dos veces.
+- ⚠️ **#10 está mal autoetiquetada 🟢.** Aunque el fix de regex de video en `lib/videoUtils.ts`
+  sí es verde, la misma PR también toca `getRachaActual`/`getTotalSemana` en `lib/firestore.ts`
+  (`setDate`→`setUTCDate`), que es lógica de fechas — congelada por el cúmulo de arriba y en
+  dirección contraria a `ymdOffset()` de #9. No mergear #10 tal cual ni tratarla como auto-merge;
+  al resolver el cúmulo, rescatar de ahí solo `lib/videoUtils.ts`.
 - `npm run build` **siempre** antes de commitear.
 - No hay tests todavía. Si vas a añadirlos, empieza por `lib/stats.ts` y `lib/videoUtils.ts` —
   son puras y es donde están las reglas de negocio.
@@ -169,16 +187,25 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 
 ## Estado actual
 
-Sin cambios sin commitear. (La fuente **Fredoka** que este archivo llevaba tiempo listando
+Sin cambios de código sin commitear. Cola de PRs abiertas atascada: 8 PRs (#5, #7, #9, #10,
+#17, #23, #26, #28), la más vieja del 6-ago, ninguna mergeada desde el 22-ago. Corrida del
+05-sep decidió no mandar ningún especialista y en su lugar dejar la cola documentada (ver
+"Reglas al trabajar aquí"). (La fuente **Fredoka** que este archivo llevaba tiempo listando
 como "suelta" en `app/globals.css` ya no está en el archivo — confirmado en `main`.)
 
 ## Backlog
 
 ### P0
+- [ ] **Vaciar la cola de PRs abiertas antes de generar más trabajo** — 8 PRs esperando
+      revisión (#5, #7, #9, #10, #17, #23, #26, #28). Orden sugerido por el `pm` el 05-sep:
+      1) mergear #17 (10 líneas, corrige pérdida de datos), 2) resolver el cúmulo #5/#28
+      (quedarse con #28 para `GuidedSession.tsx`, rebasear #5 a solo `today`/`library/[id]`),
+      3) resolver el cúmulo de fechas (mergear #9, rescatar solo `videoUtils.ts` de #10).
+      #7, #23 y #26 pueden esperar detrás de esas tres.
 - [ ] **Resolver el cúmulo de PRs duplicadas del fix de fechas UTC→local** — ver la nota en
-      "Reglas al trabajar aquí" arriba. Candidata a mergear: #9. Cerrar como duplicadas:
-      #12, #13, #21, #22 (y cualquier otra que reaparezca con el mismo diff). De #10, rescatar
-      solo el fix de regex de video.
+      "Reglas al trabajar aquí" arriba. Candidata a mergear: #9. De #10, rescatar
+      solo el fix de regex de video (no el cambio a `getRachaActual`/`getTotalSemana`, que
+      va en dirección contraria).
 
 ### P1
 - [ ] Tests para `lib/stats.ts` — sobre todo `rachaMasLarga` y el manejo de fechas en cambio de día
