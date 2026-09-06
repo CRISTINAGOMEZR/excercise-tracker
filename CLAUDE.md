@@ -177,6 +177,22 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
   (`setDate`→`setUTCDate`), que es lógica de fechas — congelada por el cúmulo de arriba y en
   dirección contraria a `ymdOffset()` de #9. No mergear #10 tal cual ni tratarla como auto-merge;
   al resolver el cúmulo, rescatar de ahí solo `lib/videoUtils.ts`.
+- ⚠️ **Corrección (06-sep-2026) al orden del 05-sep: #5 y #9 chocan, no son independientes.**
+  Verificado con `merge-tree`: las dos tocan las mismas tres líneas de `fecha: new
+  Date().toISOString().split('T')[0]` en `app/today/page.tsx` — #9 las cambia a `hoyStr()`
+  (fix del bug UTC), #5 las envuelve en un `try/finally` sin tocar el cálculo (conserva el bug).
+  Si se mergea #5 antes que #9 como sugería el orden viejo, el bug de fechas queda re-cementado
+  dentro de código nuevo y hay que volver a tocarlo. **Orden correcto: #17 → #9 → #28 → #5
+  rebaseada** (solo `app/today/page.tsx` y `app/library/[id]/page.tsx`, quitando
+  `components/GuidedSession.tsx` que ya cubre #28, y con el guard de doble-toque escrito sobre
+  `hoyStr()` en vez de `new Date().toISOString()`) → cherry-pick de `lib/videoUtils.ts` desde
+  #10 y cerrar #10.
+- ⚠️ **#7 y #10 ya no mergean limpio contra `main`** (06-sep-2026) — conflicto de merge en este
+  mismo `CLAUDE.md`, colateral de que #29 tocó las mismas secciones. Antes de retomar #7 (el P1
+  de acotar `min-height: 44px`: pasar de `button, a, [role=button]` a `button, [role=button],
+  nav a` + `min-h-touch` en los links de estados vacíos — coherente con `spacing.touch: 44px`
+  que ya existe en `tailwind.config.ts`), hay que rebasear quitando su parte de `CLAUDE.md`, que
+  quedó obsoleta.
 - `npm run build` **siempre** antes de commitear.
 - No hay tests todavía. Si vas a añadirlos, empieza por `lib/stats.ts` y `lib/videoUtils.ts` —
   son puras y es donde están las reglas de negocio.
@@ -187,25 +203,35 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 
 ## Estado actual
 
-Sin cambios de código sin commitear. Cola de PRs abiertas atascada: 8 PRs (#5, #7, #9, #10,
-#17, #23, #26, #28), la más vieja del 6-ago, ninguna mergeada desde el 22-ago. Corrida del
-05-sep decidió no mandar ningún especialista y en su lugar dejar la cola documentada (ver
-"Reglas al trabajar aquí"). (La fuente **Fredoka** que este archivo llevaba tiempo listando
-como "suelta" en `app/globals.css` ya no está en el archivo — confirmado en `main`.)
+Sin cambios de código sin commitear. Cola de PRs abiertas sigue atascada: las mismas 8 PRs
+(#5, #7, #9, #10, #17, #23, #26, #28) que el 05-sep, la más vieja del 6-ago, ninguna mergeada
+desde el 22-ago. La corrida del 06-sep tampoco mandó ningún especialista (sigue aplicando la
+regla de 4+ PRs) y en su lugar revisó la cola a fondo con `merge-tree` + build local: corrigió
+el orden de merge del cúmulo de fechas (ver "Reglas al trabajar aquí" — #5 y #9 chocan, hay que
+mergear #9 primero) y detectó que #7 y #10 ya no mergean limpio por un conflicto colateral en
+este archivo. Verificó que **#17 mergea limpio, toca 1 archivo (+10 líneas) y pasa
+`npm ci && npm run build`** — queda listo para que Cristina lo apruebe. Descartó #26 (tests que,
+por su propia nota, evitan a propósito la lógica frágil de fechas que los justificaba) y dejó
+#23 (deps) detrás de las tres prioritarias. (La fuente **Fredoka** que este archivo llevaba
+tiempo listando como "suelta" en `app/globals.css` ya no está en el archivo — confirmado en
+`main`.)
 
 ## Backlog
 
 ### P0
 - [ ] **Vaciar la cola de PRs abiertas antes de generar más trabajo** — 8 PRs esperando
-      revisión (#5, #7, #9, #10, #17, #23, #26, #28). Orden sugerido por el `pm` el 05-sep:
-      1) mergear #17 (10 líneas, corrige pérdida de datos), 2) resolver el cúmulo #5/#28
-      (quedarse con #28 para `GuidedSession.tsx`, rebasear #5 a solo `today`/`library/[id]`),
-      3) resolver el cúmulo de fechas (mergear #9, rescatar solo `videoUtils.ts` de #10).
-      #7, #23 y #26 pueden esperar detrás de esas tres.
+      revisión (#5, #7, #9, #10, #17, #23, #26, #28). Orden corregido el 06-sep (el orden del
+      05-sep hacía chocar #5 con #9, ver "Reglas al trabajar aquí"):
+      1) mergear #17 (10 líneas, corrige pérdida de datos, ya verificado que build pasa),
+      2) mergear #9 (fechas UTC→local),
+      3) mergear #28 (superset del guard de doble-toque en `GuidedSession.tsx`),
+      4) rebasear #5 a solo `app/today/page.tsx` y `app/library/[id]/page.tsx` sobre `hoyStr()`
+      y mergearla, 5) cherry-pick `lib/videoUtils.ts` de #10 y cerrar #10.
+      #7, #23 y #26 pueden esperar detrás de esas cinco (#7 necesita rebase, ver arriba).
 - [ ] **Resolver el cúmulo de PRs duplicadas del fix de fechas UTC→local** — ver la nota en
-      "Reglas al trabajar aquí" arriba. Candidata a mergear: #9. De #10, rescatar
-      solo el fix de regex de video (no el cambio a `getRachaActual`/`getTotalSemana`, que
-      va en dirección contraria).
+      "Reglas al trabajar aquí" arriba. Candidata a mergear: #9, **antes** que #5 (no después).
+      De #10, rescatar solo el fix de regex de video (no el cambio a
+      `getRachaActual`/`getTotalSemana`, que va en dirección contraria).
 
 ### P1
 - [ ] Tests para `lib/stats.ts` — sobre todo `rachaMasLarga` y el manejo de fechas en cambio de día
