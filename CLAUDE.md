@@ -164,6 +164,14 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
   de Cristina, no la falta de hallazgos. En vez de eso, el `pm` revisa el estado de la cola
   (duplicadas, obsoletas, cuál priorizar) y esa revisión es el resultado del día. A 05-sep
   hay 8 PRs abiertas (la más vieja del 6-ago) y ninguna se ha mergeado desde el 22-ago.
+- **Condición de parada (10-sep-2026), enmienda a la regla anterior:** esa revisión de la cola
+  solo se commitea **si aporta información nueva** (una PR cambió de estado, apareció un
+  conflicto, cambió el orden de merge). Si el resultado es el mismo que la corrida anterior,
+  la corrida **no abre PR ni toca este archivo** — se reporta a Cristina y se acaba. Motivo:
+  los tres últimos commits en `main` (#22, #29, #30) son docs del `pm` sobre la cola atascada,
+  cero PRs de código mergeadas en el mismo periodo. Documentar la parálisis por cuarta vez no
+  la resuelve; solo gasta la atención que es justamente el recurso escaso. Desbloquear la cola
+  es de Cristina, no del `pm`.
 - ⚠️ **Segundo cúmulo de duplicadas naciendo, mismo patrón que el de fechas:** #5 y #28
   arreglan el mismo bug (registro duplicado por doble toque en `complete()` de
   `components/GuidedSession.tsx`) con el mismo guard (`useRef` síncrono). Ninguna es superset
@@ -203,18 +211,22 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 
 ## Estado actual
 
-Sin cambios de código sin commitear. Cola de PRs abiertas sigue atascada: las mismas 8 PRs
-(#5, #7, #9, #10, #17, #23, #26, #28) que el 05-sep, la más vieja del 6-ago, ninguna mergeada
-desde el 22-ago. La corrida del 06-sep tampoco mandó ningún especialista (sigue aplicando la
-regla de 4+ PRs) y en su lugar revisó la cola a fondo con `merge-tree` + build local: corrigió
-el orden de merge del cúmulo de fechas (ver "Reglas al trabajar aquí" — #5 y #9 chocan, hay que
-mergear #9 primero) y detectó que #7 y #10 ya no mergean limpio por un conflicto colateral en
-este archivo. Verificó que **#17 mergea limpio, toca 1 archivo (+10 líneas) y pasa
-`npm ci && npm run build`** — queda listo para que Cristina lo apruebe. Descartó #26 (tests que,
-por su propia nota, evitan a propósito la lógica frágil de fechas que los justificaba) y dejó
-#23 (deps) detrás de las tres prioritarias. (La fuente **Fredoka** que este archivo llevaba
-tiempo listando como "suelta" en `app/globals.css` ya no está en el archivo — confirmado en
-`main`.)
+Sin cambios de código sin commitear. **A 10-sep-2026 la cola sigue exactamente igual que el
+06-sep:** las mismas 8 PRs abiertas (#5, #7, #9, #10, #17, #23, #26, #28), la más vieja del
+6-ago (**5 semanas**), ninguna mergeada desde el 22-ago. Re-verificado con `merge-tree` contra
+`main`: #17, #9, #28 y #5 mergean limpio; #7 y #10 siguen en conflicto y el conflicto es **solo
+en este archivo** (rebase trivial: descartar su parte de `CLAUDE.md`). El análisis y el orden de
+merge de las secciones de arriba **siguen siendo válidos, no hay nada nuevo que cambie la
+recomendación**.
+
+**#17 es lo único que hace falta hoy:** 1 archivo, +10 líneas, corrige pérdida de datos, CI en
+verde. Es el desbloqueo más barato de la cola y no depende de nadie.
+
+Las corridas del 05, 06 y 10-sep no mandaron especialistas (regla de 4+ PRs) y las tres llegaron
+a la misma conclusión. Por eso el 10-sep se añadió la **condición de parada** en "Reglas al
+trabajar aquí": a partir de ahora, si la revisión de la cola no aporta información nueva, la
+corrida no commitea nada. Descartado en su momento: #26 (tests que evitan a propósito la lógica
+de fechas que los justificaba) y #23 (deps) detrás de las prioritarias.
 
 ## Backlog
 
