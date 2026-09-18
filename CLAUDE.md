@@ -164,6 +164,13 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
   de Cristina, no la falta de hallazgos. En vez de eso, el `pm` revisa el estado de la cola
   (duplicadas, obsoletas, cuál priorizar) y esa revisión es el resultado del día. A 05-sep
   hay 8 PRs abiertas (la más vieja del 6-ago) y ninguna se ha mergeado desde el 22-ago.
+  **Corrección (18-sep-2026): "abiertas" cuenta borradores (`draft`) aparte de las que de
+  verdad esperan revisión.** Un PR en `draft` no se puede mergear en GitHub pase lo que
+  pase, así que no es parte de la cola de revisión de Cristina — es trabajo del propio
+  `pm`/especialista sin terminar de dejar listo. Ver la nota del 18-sep en "Estado actual":
+  de las 8 PRs de esta cola, 6 son `draft` y solo 2 estaban realmente esperando a Cristina.
+  La regla de 4+ sigue aplicando contando **todas** las abiertas (draft incluido) porque 8
+  PRs de trabajo sin cerrar siguen siendo el cuello de botella, aunque el motivo cambie.
 - **Condición de parada (10-sep-2026), enmienda a la regla anterior:** esa revisión de la cola
   solo se commitea **si aporta información nueva** (una PR cambió de estado, apareció un
   conflicto, cambió el orden de merge). Si el resultado es el mismo que la corrida anterior,
@@ -211,34 +218,46 @@ patrón que se usó en Alba es GitHub Actions llamando al endpoint.
 
 ## Estado actual
 
-Sin cambios de código sin commitear. **A 10-sep-2026 la cola sigue exactamente igual que el
-06-sep:** las mismas 8 PRs abiertas (#5, #7, #9, #10, #17, #23, #26, #28), la más vieja del
-6-ago (**5 semanas**), ninguna mergeada desde el 22-ago. Re-verificado con `merge-tree` contra
-`main`: #17, #9, #28 y #5 mergean limpio; #7 y #10 siguen en conflicto y el conflicto es **solo
-en este archivo** (rebase trivial: descartar su parte de `CLAUDE.md`). El análisis y el orden de
-merge de las secciones de arriba **siguen siendo válidos, no hay nada nuevo que cambie la
-recomendación**.
+Sin cambios de código sin commitear. **Corrección (18-sep-2026) a la premisa de las corridas del
+05, 06 y 10-sep:** las tres documentaron "8 PRs esperando revisión, cola atascada" sin mirar el
+campo `draft` de cada una. Verificado hoy contra la API de GitHub: **6 de las 8 son `draft`**
+(#5, #7, #10, #23, #26, #28) — GitHub no permite mergearlas pase lo que pase, así que nunca
+llegaron a Cristina para revisión. Solo **#17 y #9 son PRs reales, no-draft, `mergeable: true`**.
+#17 pasó de `draft` a `ready_for_review` el 14-sep (evento de timeline, no hallazgo nuevo de
+código); #9 pasó a ready el 24-ago. Los checks de ambas: `build` (GitHub Actions) en verde,
+`Vercel` en rojo pero pre-existente y ya documentado como fuera de alcance en un comentario de
+#17 del 18-ago (no bloquea el merge en GitHub, solo el deploy preview).
 
-**#17 es lo único que hace falta hoy:** 1 archivo, +10 líneas, corrige pérdida de datos, CI en
-verde. Es el desbloqueo más barato de la cola y no depende de nadie.
+El orden de merge y el análisis del cúmulo de fechas de las secciones de arriba **siguen siendo
+válidos** — lo que cambia es que 6 de las 8 PRs de ese orden no están listas para que Cristina
+las revise todavía (siguen en `draft`, con el trabajo pendiente ya descrito: rebase de #5 y #7,
+conflicto de #7/#10, etc.). Solo #17 y #9 están accionables hoy.
+
+**Lo único que hace falta hoy: que Cristina mergee #17 y después #9.** Las dos son PRs reales
+(no draft), mergean limpio, y son los primeros dos pasos del orden de merge ya documentado
+(`#17 → #9 → #28 → #5 rebaseada`). Esto desbloquea el resto sin que nadie escriba código.
 
 Las corridas del 05, 06 y 10-sep no mandaron especialistas (regla de 4+ PRs) y las tres llegaron
-a la misma conclusión. Por eso el 10-sep se añadió la **condición de parada** en "Reglas al
-trabajar aquí": a partir de ahora, si la revisión de la cola no aporta información nueva, la
-corrida no commitea nada. Descartado en su momento: #26 (tests que evitan a propósito la lógica
-de fechas que los justificaba) y #23 (deps) detrás de las prioritarias.
+a la misma conclusión sin cuestionar si las 8 PRs contaban igual. La condición de parada del
+10-sep sigue vigente: esta corrida sí aporta información nueva (el descubrimiento de los
+`draft`), así que se documenta; una corrida futura que no encuentre nada nuevo no debe tocar
+este archivo. Descartado en su momento: #26 (tests que evitan a propósito la lógica de fechas
+que los justificaba) y #23 (deps) detrás de las prioritarias — ambas siguen en `draft` de
+cualquier forma.
 
 ## Backlog
 
 ### P0
-- [ ] **Vaciar la cola de PRs abiertas antes de generar más trabajo** — 8 PRs esperando
-      revisión (#5, #7, #9, #10, #17, #23, #26, #28). Orden corregido el 06-sep (el orden del
+- [ ] **Que Cristina mergee #17 y #9 — son las únicas dos PRs realmente listas.** De las 8 de
+      la cola, 6 están en `draft` (#5, #7, #10, #23, #26, #28) y GitHub no las deja mergear
+      todavía (ver "Estado actual", 18-sep). Orden completo ya corregido el 06-sep (el orden del
       05-sep hacía chocar #5 con #9, ver "Reglas al trabajar aquí"):
       1) mergear #17 (10 líneas, corrige pérdida de datos, ya verificado que build pasa),
       2) mergear #9 (fechas UTC→local),
-      3) mergear #28 (superset del guard de doble-toque en `GuidedSession.tsx`),
-      4) rebasear #5 a solo `app/today/page.tsx` y `app/library/[id]/page.tsx` sobre `hoyStr()`
-      y mergearla, 5) cherry-pick `lib/videoUtils.ts` de #10 y cerrar #10.
+      3) sacar #28 de `draft` y mergearla (superset del guard de doble-toque en
+      `GuidedSession.tsx`), 4) rebasear #5, sacarla de `draft` (solo `app/today/page.tsx` y
+      `app/library/[id]/page.tsx` sobre `hoyStr()`) y mergearla, 5) cherry-pick
+      `lib/videoUtils.ts` de #10 y cerrar #10.
       #7, #23 y #26 pueden esperar detrás de esas cinco (#7 necesita rebase, ver arriba).
 - [ ] **Resolver el cúmulo de PRs duplicadas del fix de fechas UTC→local** — ver la nota en
       "Reglas al trabajar aquí" arriba. Candidata a mergear: #9, **antes** que #5 (no después).
