@@ -11,6 +11,9 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // Los tests (`node --test --experimental-strip-types`) corren como ESM nativo y
+    // ahí el import necesita la extensión: `from './stats.ts'`. Seguro con noEmit.
+    "allowImportingTsExtensions": true,
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],

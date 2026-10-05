@@ -13,7 +13,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node 22: los tests usan el runner nativo (`node --test`) con
+          # `--experimental-strip-types`, que necesita >= 22.6 y evita instalar
+          # cualquier framework de testing. En Node 20 el step de `npm test` falla.
+          node-version: 22
           cache: npm
 
       - run: npm ci
@@ -35,3 +38,7 @@ jobs:
           NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dummy
           NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: dummy
           NEXT_PUBLIC_FIREBASE_VAPID_KEY: dummy
+
+      # Tests unitarios de las funciones puras de `lib/`. Sin dependencias: test
+      # runner nativo de Node. No necesita variables de entorno.
+      - run: npm test
